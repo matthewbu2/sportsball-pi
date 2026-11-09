@@ -6,7 +6,7 @@ set -e
 cd "$(dirname "$0")"
 HOST=${1:-sportsball}          # ./deploy.sh jeter  (any ssh host alias)
 rsync -a --delete --exclude __pycache__ --exclude cache --exclude 'ticker.log*' --exclude config.json \
-  --exclude 'config.json.tmp' --exclude deploy.sh --exclude release.sh --exclude dist --exclude VERSION --exclude notes --exclude 'image*' \
+  --exclude 'config.json.tmp' --exclude deploy.sh --exclude release.sh --exclude dist --exclude VERSION --exclude notes --exclude 'image*' --exclude .git --exclude .gitignore \
   ./ "$HOST":ticker/
 ssh "$HOST" "mkdir -p ~/.config/systemd/user && echo $(date +%Y.%m.%d.%H%M%S) > ~/ticker/VERSION &&
   install -m644 ~/ticker/setup/*.service ~/ticker/setup/*.timer ~/.config/systemd/user/ &&
