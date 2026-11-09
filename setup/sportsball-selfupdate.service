@@ -1,0 +1,11 @@
+# User service: updater.py, nightly from sportsball-selfupdate.timer.
+[Unit]
+Description=Sportsball self-update
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 -u %h/ticker/updater.py
+TimeoutStartSec=15min
+StandardOutput=append:%h/ticker/ticker.log
+StandardError=append:%h/ticker/ticker.log

@@ -1,0 +1,10 @@
+__pycache__/
+cache/
+config.json
+config.json.tmp
+ticker.log*
+notes/
+dist/
+image-cache/
+image-out/
+VERSION

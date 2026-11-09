@@ -1,0 +1,24 @@
+# User service (systemctl --user), installed by deploy.sh / updater.py.
+[Unit]
+Description=Sportsball LED sports ticker
+After=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+# main.py says READY once the screen is up, then pings every 10 s from its
+# frame loop; if the loop freezes for a minute, systemd restarts it.
+Type=notify
+NotifyAccess=main
+WatchdogSec=60
+TimeoutStartSec=120
+WorkingDirectory=%h/ticker
+# Keep the log small: past 1 MB it moves to ticker.log.1 (one old copy).
+ExecStartPre=/bin/sh -c 'f=%h/ticker/ticker.log; if [ -f $$f ] && [ $$(stat -c%%s $$f) -gt 1000000 ]; then mv $$f $$f.1; fi'
+ExecStart=/usr/bin/python3 -u main.py
+Restart=always
+RestartSec=5
+StandardOutput=append:%h/ticker/ticker.log
+StandardError=append:%h/ticker/ticker.log
+
+[Install]
+WantedBy=default.target

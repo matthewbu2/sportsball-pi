@@ -1,0 +1,10 @@
+# Nightly code update, finished well before the 03:30 reboot.
+[Unit]
+Description=Sportsball self-update (03:05)
+
+[Timer]
+OnCalendar=*-*-* 03:05:00
+RandomizedDelaySec=5min
+
+[Install]
+WantedBy=timers.target

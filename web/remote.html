@@ -1,0 +1,386 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#070b1a">
+<title>Sportsball</title>
+<style>
+@font-face{font-family:BC;src:url(/font/BarlowCondensed-SemiBold.ttf);font-weight:600}
+@font-face{font-family:BC;src:url(/font/BarlowCondensed-Bold.ttf);font-weight:700}
+@font-face{font-family:BC;src:url(/font/BarlowCondensed-ExtraBold.ttf);font-weight:800}
+@font-face{font-family:B;src:url(/font/Barlow-Medium.ttf);font-weight:500}
+@font-face{font-family:B;src:url(/font/Barlow-SemiBold.ttf);font-weight:600}
+:root{--bg:#070b1a;--bg2:#0c1330;--panel:rgba(22,34,74,.55);--edge:rgba(120,150,230,.18);--edge2:rgba(120,150,230,.32);
+ --ink:#fff;--dim:#a9b8dc;--faint:#6e7ea8;--gold:#ffce46;--live:#ff4b4b;--good:#3ee08f;--r:18px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html{background:var(--bg)}
+body{margin:0;color:var(--ink);font:500 16px/1.35 B,system-ui,sans-serif;min-height:100vh;
+ background:radial-gradient(1200px 600px at 80% -10%,#1c2c66 0%,transparent 60%),radial-gradient(900px 500px at -10% 10%,#14204d 0%,transparent 55%),var(--bg);
+ padding:0 0 calc(92px + env(safe-area-inset-bottom))}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.5;
+ background:repeating-linear-gradient(115deg,transparent 0 120px,rgba(255,255,255,.018) 120px 170px)}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px;position:relative}
+.cond{font-family:BC,B,sans-serif}
+/* header */
+header{position:sticky;top:0;z-index:20;padding:calc(12px + env(safe-area-inset-top)) 0 12px;
+ background:linear-gradient(var(--bg) 60%,rgba(7,11,26,0));}
+.hd{display:flex;align-items:center;gap:10px}
+.mark{font:italic 800 30px/1 BC,sans-serif;letter-spacing:.02em;background:linear-gradient(180deg,#fff 30%,#c9d6ff);
+ -webkit-background-clip:text;background-clip:text;color:transparent}
+.chip{font:800 13px/1 BC,sans-serif;letter-spacing:.12em;color:#1a1300;background:var(--gold);border-radius:6px;padding:4px 7px 3px;transform:skew(-10deg)}
+.conn{margin-left:auto;display:flex;align-items:center;gap:7px;font:700 13px BC,sans-serif;letter-spacing:.12em;color:var(--dim);
+ background:var(--panel);border:1px solid var(--edge);padding:6px 11px;border-radius:99px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 0 0 rgba(62,224,143,.6);animation:ping 2s infinite}
+.off .dot{background:var(--live);animation:none}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(62,224,143,.55)}80%,100%{box-shadow:0 0 0 9px rgba(62,224,143,0)}}
+.sub{color:var(--faint);font:600 14px BC,sans-serif;letter-spacing:.06em;margin-top:6px;text-transform:uppercase}
+/* sections */
+.view{display:none;animation:in .25s ease}.view.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.lbl{font:700 14px BC,sans-serif;letter-spacing:.16em;color:var(--faint);text-transform:uppercase;margin:24px 2px 10px;display:flex;align-items:center;gap:8px}
+.lbl:after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--edge2),transparent)}
+.card{background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+/* hero */
+.hero{position:relative;overflow:hidden;border-radius:22px;border:1px solid var(--edge2);min-height:200px;
+ box-shadow:0 18px 40px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08)}
+.hero .bg{position:absolute;inset:0;background:linear-gradient(105deg,var(--a,#24346e) 0%,#0b1230 46%,#0b1230 54%,var(--h,#24346e) 100%)}
+.hero .bg:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.45)),
+ repeating-linear-gradient(115deg,transparent 0 60px,rgba(255,255,255,.035) 60px 90px)}
+.hero .in{position:relative;padding:16px 16px 18px}
+.top{display:flex;align-items:center;gap:8px}
+.tag{font:700 13px/1 BC,sans-serif;letter-spacing:.14em;padding:6px 9px 5px;border-radius:7px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);color:var(--dim)}
+.tag.live{color:#fff;background:var(--live);border-color:transparent;display:flex;gap:6px;align-items:center}
+.tag.live:before{content:"";width:7px;height:7px;border-radius:50%;background:#fff;animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:.25}}
+.tag.gold{color:#1a1300;background:var(--gold);border-color:transparent}
+.ontv{margin-left:auto;font:700 12px BC,sans-serif;letter-spacing:.2em;color:rgba(255,255,255,.65)}
+.match{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin-top:14px}
+.tm{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.tm img{width:66px;height:66px;object-fit:contain;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5))}
+.ab{font:800 22px/1 BC,sans-serif;letter-spacing:.04em}
+.nm{font:600 13px BC,sans-serif;color:var(--dim);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.mid{text-align:center;padding:0 8px}
+.sc{font:800 64px/.9 BC,sans-serif;text-shadow:0 4px 18px rgba(0,0,0,.5);display:flex;gap:14px;align-items:baseline;justify-content:center}
+.sc .d{font-size:30px;color:rgba(255,255,255,.4)}
+.sc .lo{color:rgba(255,255,255,.55)}
+.clock{font:700 18px BC,sans-serif;letter-spacing:.08em;margin-top:6px;color:#fff}
+.down{font:700 14px BC,sans-serif;color:var(--gold);letter-spacing:.08em;margin-top:2px}
+.when{font:800 40px/1 BC,sans-serif}
+.play{margin-top:14px;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.35);border-left:3px solid var(--gold);color:#e8eeff;font-size:14px}
+.cardnow{display:flex;gap:14px;align-items:center;margin-top:14px}
+.cardnow img{width:120px;height:72px;object-fit:cover;border-radius:10px;flex:none}
+.cardnow .t{font:800 24px/1.05 BC,sans-serif}
+.snapimg{display:block;width:100%;margin-top:12px;border-radius:12px;border:1px solid var(--edge2)}
+/* buttons */
+.row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.btn{appearance:none;border:1px solid var(--edge2);background:linear-gradient(180deg,rgba(40,58,118,.75),rgba(20,30,66,.75));color:#fff;
+ border-radius:14px;padding:13px 10px;font:700 16px BC,sans-serif;letter-spacing:.08em;text-transform:uppercase;display:flex;gap:8px;align-items:center;justify-content:center;cursor:pointer;
+ transition:transform .08s,background .2s}
+.btn:active{transform:scale(.96)}
+.btn svg{width:18px;height:18px;flex:none}
+.btn.on{background:linear-gradient(180deg,#ffd866,#f2b400);color:#1a1300;border-color:transparent}
+.btn.wide{width:100%}
+.btn.go{background:linear-gradient(180deg,#ffd866,#f2b400);color:#1a1300;border-color:transparent}
+/* quick toggles */
+.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.q{border:1px solid var(--edge);background:var(--panel);border-radius:16px;padding:14px 8px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;
+ color:var(--faint);font:700 13px BC,sans-serif;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.q svg{width:26px;height:26px}
+.q.on{color:#fff;border-color:rgba(255,206,70,.55);background:linear-gradient(180deg,rgba(255,206,70,.18),rgba(255,206,70,.04));box-shadow:0 0 24px rgba(255,206,70,.12) inset}
+.q.on svg{color:var(--gold)}
+/* game list */
+.games{display:flex;flex-direction:column;gap:8px}
+.g{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;padding:10px 12px;border-radius:14px;cursor:pointer;
+ border:1px solid var(--edge);background:linear-gradient(100deg,color-mix(in srgb,var(--a) 28%,transparent),rgba(12,19,48,.7) 40%,rgba(12,19,48,.7) 60%,color-mix(in srgb,var(--h) 28%,transparent));
+ transition:transform .08s}
+.g:active{transform:scale(.98)}
+.g.cur{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 22px rgba(255,206,70,.18)}
+.g .s{display:flex;align-items:center;gap:8px;min-width:0}.g .s.r{justify-content:flex-end}
+.g img{width:30px;height:30px;object-fit:contain}
+.g .a{font:800 19px BC,sans-serif}.g .n{font:800 24px BC,sans-serif}
+.g .m{text-align:center;font:700 13px BC,sans-serif;letter-spacing:.06em;color:var(--dim);min-width:84px}
+.g .m b{display:block;font-weight:700;color:var(--live);letter-spacing:.14em;font-size:11px}
+.g .fav{color:var(--gold)}
+.grp{font:700 12px BC,sans-serif;letter-spacing:.2em;color:var(--faint);margin:14px 4px 2px}
+.more{margin-top:8px}
+/* looks */
+.looks{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.look{border-radius:16px;border:1px solid var(--edge);overflow:hidden;cursor:pointer;background:var(--panel);transition:transform .1s}
+.look:active{transform:scale(.97)}
+.look.on{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.prev{height:84px;position:relative}
+.prev.hd{background:linear-gradient(105deg,#c8102e,#101a44 45%,#101a44 55%,#002c5f)}
+.prev.hd:after{content:"";position:absolute;left:18%;right:18%;top:22%;bottom:16%;border:2px solid rgba(255,255,255,.55);border-radius:50% 50% 6px 6px/30% 30% 6px 6px;
+ transform:perspective(120px) rotateX(28deg)}
+.prev.c8{background:#000;background-image:radial-gradient(circle,#ffce46 38%,transparent 42%),radial-gradient(circle,#1a1f2e 38%,transparent 42%);
+ background-size:8px 8px,8px 8px;background-position:0 0,4px 4px}
+.prev.c8:after{content:"8-BIT";position:absolute;inset:0;display:grid;place-items:center;font:800 30px BC,sans-serif;color:#ff3b3b;letter-spacing:.2em;
+ text-shadow:0 0 10px #ff3b3b;background:rgba(0,0,0,.55)}
+.look .t{padding:10px 12px;display:flex;justify-content:space-between;align-items:center;font:800 17px BC,sans-serif;letter-spacing:.04em}
+.look .t span{font:700 11px BC,sans-serif;letter-spacing:.16em;color:#1a1300;background:var(--gold);padding:3px 6px;border-radius:5px}
+/* switches */
+.sw{display:flex;align-items:center;gap:12px;padding:14px 16px;border-top:1px solid var(--edge)}
+.sw:first-child{border-top:0}
+.sw .tx{flex:1}.sw .tx b{display:block;font:700 18px BC,sans-serif;letter-spacing:.03em}.sw .tx span{font-size:13px;color:var(--faint)}
+.sw.child{padding-left:34px}.sw.child .tx b{font-size:16px;color:var(--dim)}
+.sw.dis{opacity:.4}
+.tog{position:relative;width:54px;height:32px;flex:none}.tog input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1}
+.tog i{position:absolute;inset:0;border-radius:99px;background:#2a3456;border:1px solid var(--edge2);transition:.2s}
+.tog i:before{content:"";position:absolute;width:24px;height:24px;left:3px;top:3px;border-radius:50%;background:#cfd8f3;transition:.2s;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.tog input:checked+i{background:linear-gradient(180deg,#ffd866,#f2b400);border-color:transparent}
+.tog input:checked+i:before{transform:translateX(22px);background:#fff}
+/* demos */
+#demos h2{font:700 14px BC,sans-serif;letter-spacing:.16em;color:var(--faint);text-transform:uppercase;margin:22px 2px 10px}
+#demos .g{all:unset;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+#demos button{appearance:none;border:1px solid var(--edge);border-radius:14px;padding:18px 12px;cursor:pointer;color:#fff;text-align:left;
+ font:800 19px BC,sans-serif;letter-spacing:.03em;background:linear-gradient(135deg,rgba(255,75,75,.22),rgba(20,30,66,.8) 60%);position:relative;overflow:hidden}
+#demos button:after{content:"▶";position:absolute;right:12px;bottom:10px;font-size:12px;color:var(--gold)}
+#demos button:nth-child(3n+2){background:linear-gradient(135deg,rgba(255,206,70,.2),rgba(20,30,66,.8) 60%)}
+#demos button:nth-child(3n+3){background:linear-gradient(135deg,rgba(80,140,255,.25),rgba(20,30,66,.8) 60%)}
+#demos button:active{transform:scale(.96)}
+/* settings */
+form .card{padding:4px 16px;margin-bottom:6px}
+form label{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 0;border-top:1px solid var(--edge);font-size:15px}
+form .card label:first-child{border-top:0}
+input,select,textarea{background:rgba(0,0,0,.35);color:#fff;border:1px solid var(--edge2);border-radius:10px;padding:9px 10px;font:500 15px B,sans-serif}
+::placeholder{color:var(--faint);opacity:.8}
+input:focus,select:focus,textarea:focus{outline:2px solid rgba(255,206,70,.6);outline-offset:1px}
+input[type=range]{flex:1;max-width:200px;accent-color:var(--gold);padding:0;border:0;background:none}
+input[type=number]{width:72px;text-align:center}input.wide{flex:1;min-width:0}
+input[type=checkbox]{appearance:none;width:50px;height:30px;border-radius:99px;background:#2a3456;border:1px solid var(--edge2);position:relative;cursor:pointer;flex:none;padding:0;transition:.2s}
+input[type=checkbox]:before{content:"";position:absolute;width:22px;height:22px;left:3px;top:3px;border-radius:50%;background:#cfd8f3;transition:.2s}
+input[type=checkbox]:checked{background:linear-gradient(180deg,#ffd866,#f2b400);border-color:transparent}
+input[type=checkbox]:checked:before{transform:translateX(20px);background:#fff}
+.team{display:flex;gap:8px;padding:8px 0}.team select{width:100px}.team input{flex:1;min-width:0}
+.note{color:var(--faint);font-size:13px;margin:8px 2px}
+.savebar{position:sticky;bottom:calc(84px + env(safe-area-inset-bottom));padding-top:12px;z-index:5}
+textarea{width:100%;resize:vertical}
+details.card{padding:0}
+details summary{list-style:none;padding:15px 16px;font:700 17px BC,sans-serif;letter-spacing:.06em;cursor:pointer;display:flex;justify-content:space-between}
+details summary:after{content:"+";color:var(--gold);font-size:20px;line-height:1}
+details[open] summary:after{content:"–"}
+details .body{padding:0 16px 16px}
+#health{width:100%;border-collapse:collapse;font-size:14px}#health td{padding:8px 2px;border-top:1px solid var(--edge)}
+#health td:last-child{text-align:right;color:var(--dim)}#health .bad td:first-child{color:var(--live)}
+#health td:first-child:before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--good);margin-right:8px;vertical-align:1px}
+#health .bad td:first-child:before{background:var(--live)}
+.mini{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+a{color:var(--gold)}
+/* tab bar */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+ background:linear-gradient(180deg,rgba(9,14,34,.82),rgba(5,8,20,.96));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--edge)}
+nav .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:0 6px}
+nav button{appearance:none;border:0;background:none;color:var(--faint);display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0;
+ font:700 12px BC,sans-serif;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;border-radius:12px;position:relative}
+nav button svg{width:24px;height:24px}
+nav button.on{color:#fff}
+nav button.on svg{color:var(--gold)}
+nav button.on:before{content:"";position:absolute;top:-9px;width:28px;height:3px;border-radius:3px;background:var(--gold);box-shadow:0 0 12px var(--gold)}
+/* toast */
+#toast{position:fixed;left:50%;bottom:calc(100px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;z-index:40;
+ background:#fff;color:#0b1230;font:700 15px BC,sans-serif;letter-spacing:.06em;padding:11px 18px;border-radius:99px;box-shadow:0 10px 30px rgba(0,0,0,.5);transition:.25s;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.empty{padding:26px;text-align:center;color:var(--faint)}
+@media (min-width:640px){.tm img{width:84px;height:84px}.sc{font-size:80px}}
+</style></head><body>
+<header><div class=wrap>
+ <div class=hd><div class=mark>SPORTSBALL</div><div class=chip>@FLAVOR@</div>
+  <div class=conn id=conn><span class=dot></span><span id=connt>CONNECTING</span></div></div>
+ <div class=sub id=st>&nbsp;</div>
+</div></header>
+
+<main class=wrap>
+<!-- NOW -->
+<section class="view on" id=v0>
+ <div class=hero id=hero><div class=bg></div><div class=in id=heroin><div class=empty>Waiting for the ticker...</div></div></div>
+ <div class=row>
+  <button class=btn id=pin onclick="cmd('/pin','Pinned')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3z"/></svg><span>Stay</span></button>
+  <button class=btn onclick="cmd('/skip','Next up')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5l8 7-8 7zM17 5v14"/></svg>Next</button>
+  <button class=btn onclick="snap()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M8 21h8"/></svg>Peek</button>
+ </div>
+ <img class=snapimg id=snap hidden alt="What the TV shows">
+
+ <div class=lbl>Quick</div>
+ <div class=quick>
+  <div class=q id=q_sound onclick="flip('muted')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4zM15.5 8.5a5 5 0 010 7M19 5a10 10 0 010 14"/></svg>Sound</div>
+  <div class=q id=q_announcer onclick="flip('announcer')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v4"/></svg>Voice</div>
+  <div class=q id=q_jumbotron onclick="flip('jumbotron')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z"/></svg>Replays</div>
+ </div>
+
+ <div class=lbl>Put a game on the TV</div>
+ <div class=games id=games><div class="card empty">Loading games...</div></div>
+
+ <div id=lookbox hidden><div class=lbl>Look</div>
+  <div class=looks>
+   <div class=look id=look_hd onclick="look('hd','HD broadcast')"><div class="prev hd"></div><div class=t>HD BROADCAST</div></div>
+   <div class=look id=look_classic onclick="look('classic','Classic 8-bit')"><div class="prev c8"></div><div class=t>CLASSIC 8-BIT</div></div>
+  </div>
+  <p class=note>Same teams and settings either way. Switching restarts the screen (about 20 seconds).</p></div>
+</section>
+
+<!-- FEATURES -->
+<section class=view id=v1>
+ <div class=lbl>Sound &amp; voice</div><div class=card id=fg_sound></div>
+ <div class=lbl>On screen</div><div class=card id=fg_screen></div>
+ <div class=lbl>Info cards</div><div class=card id=fg_info></div>
+ <div class=lbl>System</div>
+ <details class=card><summary>Health</summary><div class=body><table id=health></table></div></details>
+ <div class=mini>
+  <button class=btn onclick="cmd('/voice/test','Testing the voice')">Test voice</button>
+  <button class=btn onclick="cmd('/update','Checking for updates')">Updates</button>
+  <button class=btn onclick="cmd('/tv/on','TV on')">TV on</button>
+  <button class=btn onclick="cmd('/tv/off','TV off')">TV off</button>
+ </div>
+ <p class=note id=ver></p>
+ <div class=lbl>Note something for later</div>
+ <div class=card style="padding:12px"><textarea id=note rows=3 placeholder="What looks wrong or should change? The TV picture and the game data are saved with it."></textarea>
+  <button class="btn wide" style="margin-top:10px" onclick="note()">Save note</button></div>
+</section>
+
+<!-- DEMOS -->
+<section class=view id=v2><p class=note style="margin-top:4px">Plays a scoring animation on the TV right now.</p><div id=demos>@DEMOS@</div></section>
+
+<!-- SETTINGS -->
+<section class=view id=v3><form id=f onsubmit="saveSettings();return false">
+ <div class=lbl>Teams</div>
+ <div class=card style="padding:8px 16px"><div id=teams></div>
+  <label style="border-top:1px solid var(--edge)">Favorites<input class=wide name=favorites placeholder="Colts, IU Hoosiers"></label></div>
+ <p class=note>One line per sport or team. Leave the team blank for every game of that sport.</p>
+ <div class=lbl>Screen</div><div class=card>
+  <label>Seconds on each live game<input type=number name=pane_dwell min=8 max=300 step=2></label>
+  <label>Brightness<input type=range name=brightness min=10 max=100></label>
+  <label>Dim at night<input type=checkbox name=night_dim></label>
+  <label>Night from / to (hour)<span><input type=number name=night_start min=0 max=23> <input type=number name=night_end min=0 max=23></span></label>
+  <label>Night brightness<input type=range name=night_level min=5 max=100></label></div>
+ <div class=lbl>Games</div><div class=card>
+  <label>Jump to red-zone drives<input type=checkbox name=red_zone></label>
+  <label>Betting lines on upcoming games<input type=checkbox name=show_odds></label>
+  <label>College: only favorites + Top 25<input type=checkbox name=cfb_top25></label>
+  <label>Broadcast delay (seconds)<input type=number name=delay min=0 max=180 step=5></label></div>
+ <p class=note>Streaming TV runs 30-90 s behind. Set the delay so a touchdown shows here when you see it on TV.</p>
+ <div class=lbl>Sound</div><div class=card>
+  <label>Sound effects<input type=checkbox name=sound_fx></label>
+  <label>Announcer voice<select name=voice>@VOICES@</select></label>
+  <label>Announce favorites' kickoffs<input type=checkbox name=pregame></label>
+  <label>Old AM-radio sound<input type=checkbox name=voice_radio></label>
+  <label>Volume<input type=range name=volume min=0 max=100></label>
+  <label>Quiet from / to (hour)<span><input type=number name=quiet_start min=0 max=23> <input type=number name=quiet_end min=0 max=23></span></label></div>
+ <div class=lbl>Overnight</div><div class=card>
+  <label>Screensaver animations (silent)<input type=checkbox name=saver></label>
+  <label>From / to (hour)<span><input type=number name=saver_start min=0 max=23> <input type=number name=saver_end min=0 max=23></span></label></div>
+ <div class=lbl>TV power (HDMI-CEC)</div><div class=card>
+  <label>Control the TV<input type=checkbox name=cec></label>
+  <label>Turn on before a favorite plays (min)<input type=number name=cec_on_before min=0 max=240></label>
+  <label>Turn off at (hour)<input type=number name=cec_off_at min=0 max=23></label></div>
+ <p class=note id=cec></p>
+ <div class=lbl>Updates</div><div class=card>
+  <label>Install new versions nightly<input type=checkbox name=auto_update></label>
+  <label>Release address<input class=wide name=update_url placeholder="none"></label></div>
+ <div class=savebar><button class="btn go wide" id=save>Save settings</button></div>
+ <p class=note style="text-align:center;margin-top:16px"><a href="/setup">Run the first-time setup again</a></p>
+</form></section>
+</main>
+
+<nav><div class=wrap>
+ <button class=on onclick="tab(0)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Now</button>
+ <button onclick="tab(1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="6"/><circle cx="16" cy="12" r="3"/></svg>Features</button>
+ <button onclick="tab(2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M10 8l6 4-6 4z"/></svg>Demos</button>
+ <button onclick="tab(3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 01-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 010-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 014 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 010 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>Settings</button>
+</div></nav>
+<div id=toast></div>
+
+<script>
+const SPORTS=@SPORTS@;
+const $=id=>document.getElementById(id);
+// small DOM builder: h('div',{class:'x'},child,...) -- text is always set as text (team names come from ESPN)
+function h(tag,attrs,...kids){const e=document.createElement(tag);
+ for(const [k,v] of Object.entries(attrs||{})){if(v==null||v===false)continue;if(k=='style')e.style.cssText=v;else if(k.startsWith('on'))e[k]=v;else e.setAttribute(k,v)}
+ for(const c of kids.flat()){if(c==null||c===false)continue;e.append(c.nodeType?c:document.createTextNode(String(c)))}return e}
+let S={},cur=0,timer=0;
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(timer);timer=setTimeout(()=>t.classList.remove('show'),1800)}
+function post(u){return fetch(u,{method:'POST'})}
+function cmd(u,msg){post(u).then(r=>{toast(r.ok?msg:'The ticker said no');setTimeout(st,400)}).catch(()=>toast('Can not reach the ticker'))}
+function tab(i){cur=i;history.replaceState(null,'',['#now','#features','#demos','#settings'][i]);document.querySelectorAll('.view').forEach((v,k)=>v.classList.toggle('on',k==i));
+ document.querySelectorAll('nav button').forEach((b,k)=>b.classList.toggle('on',k==i));scrollTo(0,0);
+ if(i==3)load();if(i==1)health();if(i==0)board()}
+function online(ok){$('conn').classList.toggle('off',!ok);$('connt').textContent=ok?'LIVE':'OFFLINE'}
+// ---------------- now
+function team(t){return h('div',{class:'tm'},h('img',{src:t.logo||'',alt:''}),h('div',{class:'ab'},(t.rank?'#'+t.rank+' ':'')+t.abbr),h('div',{class:'nm'},t.name))}
+function hero(n){const box=$('heroin'),bg=document.querySelector('.hero .bg');box.replaceChildren();
+ if(!n||n.type=='none'){box.append(h('div',{class:'empty'},'Nothing on the TV yet'));return}
+ if(n.type=='card'){bg.style.setProperty('--a','#2a3a7a');bg.style.setProperty('--h','#4a2a6a');
+  box.append(h('div',{class:'top'},h('span',{class:'tag gold'},n.kind.toUpperCase()),h('span',{class:'tag'},n.sport),h('span',{class:'ontv'},'ON THE TV')),
+   h('div',{class:'cardnow'},n.image?h('img',{src:n.image,alt:''}):null,h('div',{class:'t'},n.title)));return}
+ bg.style.setProperty('--a',n.away.color);bg.style.setProperty('--h',n.home.color);
+ const live=n.state=='live',fin=n.state=='final';
+ const top=h('div',{class:'top'},live?h('span',{class:'tag live'},'LIVE'):h('span',{class:'tag'},fin?'FINAL':'UPCOMING'),
+  h('span',{class:'tag'},n.sport),n.fav?h('span',{class:'tag gold'},'FAVORITE'):null,h('span',{class:'ontv'},'ON THE TV'));
+ let mid;
+ if(n.state=='pre'){mid=h('div',{class:'mid'},h('div',{class:'when'},n.status),n.network?h('div',{class:'down'},n.network):null)}
+ else{const a=+n.away.score||0,b=+n.home.score||0;
+  mid=h('div',{class:'mid'},h('div',{class:'sc'},h('span',{class:fin&&a<b?'lo':''},n.away.score||'0'),h('span',{class:'d'},'-'),h('span',{class:fin&&b<a?'lo':''},n.home.score||'0')),
+   h('div',{class:'clock'},n.status),n.down?h('div',{class:'down'},n.down):null)}
+ box.append(top,h('div',{class:'match'},team(n.away),mid,team(n.home)),n.play?h('div',{class:'play'},n.play):null)}
+function row(g){const live=g.state=='live';
+ const mid=h('div',{class:'m'},live?h('b',{},'LIVE'):null,g.state=='pre'?g.status.replace(/^[A-Z]{3} \d+ /,''):g.status);
+ const sc=x=>g.state=='pre'?h('span',{class:'n',style:'font-size:14px;color:var(--faint)'},x.record||''):h('span',{class:'n'},x.score||'0');
+ const e=h('div',{class:'g'+(S.now&&S.now.key==g.key?' cur':''),style:'--a:'+g.away.color+';--h:'+g.home.color,onclick:()=>show(g)},
+  h('div',{class:'s'},h('img',{src:g.away.logo||'',alt:'',loading:'lazy'}),h('span',{class:'a'+(g.fav?' fav':'')},g.away.abbr),sc(g.away)),mid,
+  h('div',{class:'s r'},sc(g.home),h('span',{class:'a'+(g.fav?' fav':'')},g.home.abbr),h('img',{src:g.home.logo||'',alt:'',loading:'lazy'})));return e}
+let BOARD=[],showAll=false;
+function board(){fetch('/board').then(r=>r.json()).then(b=>{BOARD=b;drawBoard()}).catch(()=>{})}
+function drawBoard(){const box=$('games');box.replaceChildren();if(!BOARD.length){box.append(h('div',{class:'card empty'},'No games right now'));return}
+ const groups=[['live','LIVE NOW'],['pre','COMING UP'],['final','FINAL']];let shown=0;
+ for(const [k,t] of groups){let gs=BOARD.filter(g=>g.state==k);if(!gs.length)continue;
+  if(!showAll){gs=gs.slice(0,k=='live'?12:4)}shown+=gs.length;box.append(h('div',{class:'grp'},t),...gs.map(row))}
+ if(!showAll&&shown<BOARD.length)box.append(h('button',{class:'btn wide more',onclick:()=>{showAll=true;drawBoard()}},'Show all '+BOARD.length+' games'))}
+function show(g){post('/show/'+encodeURIComponent(g.key)).then(()=>{toast(g.away.abbr+' at '+g.home.abbr+' on the TV');setTimeout(st,500)})}
+function snap(){const i=$('snap');toast('Grabbing the TV picture');i.onload=()=>{i.hidden=false};i.src='/snap.png?'+Date.now()}
+function look(k,label){if(!S.looks)return;const c=S.looks.find(l=>l[2]);if(c&&c[0]==k)return;
+ if(!confirm('Switch the TV to '+label+'?'))return;post('/style/'+k).then(()=>{toast('Switching to '+label);setTimeout(()=>location.reload(),20000)})}
+// ---------------- features
+const GROUPS={muted:'sound',announcer:'sound',announce_every:'sound',roundups:'sound',pregame:'sound',jumbotron:'screen',red_zone:'screen',saver:'screen',info_cards:'info',info_live:'info',info_news:'info',info_standings:'info',info_rankings:'info'};
+const CHILD={announce_every:'announcer',roundups:'announcer',pregame:'announcer',info_live:'info_cards',info_news:'info_cards',info_standings:'info_cards',info_rankings:'info_cards'};
+const HINT={muted:'Everything through the TV speakers',announcer:'Calls the big moments like a broadcaster',announce_every:'Routine plays too, not just the big ones',
+ roundups:'Scores from around the league now and then',jumbotron:'Retro 8-bit scoreboard replays when someone scores',info_cards:'Standings, rankings and news between games',
+ info_live:'Also once per trip around the live games',pregame:'Kickoff in 15 minutes for your favorites',red_zone:'Cut to football drives inside the 20',saver:'Animations overnight, silent',info_news:'Headlines with photos',info_standings:'Division and conference tables',info_rankings:'AP Top 25 for college'};
+function feat(fs){if(!fs)return;const on={};fs.forEach(f=>on[f[0]]=f[2]);
+ for(const g of ['sound','screen','info']){const box=$('fg_'+g);if(box.children.length)continue;
+  const mine=fs.filter(f=>(GROUPS[f[0]]||'screen')==g);box.hidden=!mine.length;box.previousElementSibling.hidden=!mine.length;
+  mine.forEach(f=>box.append(h('label',{class:'sw'+(CHILD[f[0]]?' child':''),id:'sw_'+f[0]},
+   h('div',{class:'tx'},h('b',{},f[1].replace(/ \(off.*\)/,'')),h('span',{},HINT[f[0]]||'')),
+   h('span',{class:'tog'},h('input',{type:'checkbox',id:'f_'+f[0],onchange:()=>flip(f[0])}),h('i',{})))))}
+ fs.forEach(f=>{const i=$('f_'+f[0]);if(i&&document.activeElement!==i)i.checked=f[2];
+  const p=CHILD[f[0]];const r=$('sw_'+f[0]);if(r)r.classList.toggle('dis',!!p&&!on[p])});
+ for(const [q,k] of [['q_sound','muted'],['q_announcer','announcer'],['q_jumbotron','jumbotron']]){const e=$(q);e.hidden=!(k in on);e.classList.toggle('on',!!on[k])}
+ const qs=[...document.querySelectorAll('.q')].filter(e=>!e.hidden).length;document.querySelector('.quick').style.gridTemplateColumns='repeat('+qs+',1fr)'}
+const NICE={muted:'Sound',announcer:'Announcer',jumbotron:'Replays'};
+function flip(k){post('/toggle/'+k).then(()=>{st();const f=(S.features||[]).find(x=>x[0]==k);if(f)toast((NICE[k]||f[1].replace(/ \(off.*\)/,''))+(f[2]?' off':' on'))})}
+function health(){fetch('/status?health').then(r=>r.json()).then(rows=>{const t=$('health');t.replaceChildren();
+ rows.forEach(([k,v,ok])=>t.append(h('tr',{class:ok?'':'bad'},h('td',{},k),h('td',{},v))))}).catch(()=>{})}
+function note(){const t=$('note');if(!t.value.trim())return;fetch('/note',{method:'POST',body:t.value}).then(r=>r.text()).then(m=>{t.value='';toast('Note saved')})}
+// ---------------- status loop
+let lastKey='';
+function st(){fetch('/status').then(r=>r.json()).then(s=>{S=s;online(true);
+ $('st').textContent=s.games+' games · '+s.live+' live'+(s.pinned?' · staying on this one':'');
+ $('pin').classList.toggle('on',!!s.pinned);
+ $('ver').textContent='Version '+s.version+' · TV answers CEC: '+s.cec;$('cec').textContent='TV answers CEC: '+s.cec;
+ feat(s.features);hero(s.now||(s.card?{type:'card',kind:'card',title:s.card,sport:''}:null));
+ const ls=s.looks||[];$('lookbox').hidden=ls.length<2;ls.forEach(l=>{const e=$('look_'+l[0]);if(!e)return;e.classList.toggle('on',l[2]);
+  const t=e.querySelector('.t');if(l[2]&&!t.querySelector('span'))t.append(h('span',{},'ON'));if(!l[2]&&t.querySelector('span'))t.querySelector('span').remove()});
+ const k=s.now&&s.now.key||'';if(k!=lastKey){lastKey=k;if(cur==0)drawBoard()}
+}).catch(()=>online(false))}
+// ---------------- settings
+function load(){fetch('/settings').then(r=>r.json()).then(c=>{const f=$('f');
+ for(const e of f.elements){if(e.name&&!(e.name in c)){const l=e.closest('label');if(l)l.hidden=true}}
+ for(const [k,v] of Object.entries(c)){const e=f.elements[k];if(!e||!e.type)continue;if(e.type=='checkbox')e.checked=v;else e.value=v}
+ const t=$('teams');t.replaceChildren();c.teams.concat([[0,'']]).forEach(([s,q])=>{
+  const sel=h('select',{},SPORTS.map((n,i)=>h('option',{value:i,selected:i==s?'':null},i?n:'-')));
+  t.append(h('div',{class:'team'},sel,h('input',{placeholder:'all games',value:q})))})})}
+function saveSettings(){const f=$('f'),o={};
+ for(const e of f.elements){if(!e.name)continue;o[e.name]=e.type=='checkbox'?e.checked:e.type=='text'||e.type==''||e.type=='select-one'?e.value:Number(e.value)}
+ o.teams=[...document.querySelectorAll('.team')].map(d=>[Number(d.querySelector('select').value),d.querySelector('input').value]).filter(t=>t[0]>0);
+ fetch('/settings',{method:'POST',body:JSON.stringify(o)}).then(r=>{toast(r.ok?'Settings saved':'Could not save');load()}).catch(()=>toast('Can not reach the ticker'))}
+function go(n){post('/demo/'+n).then(()=>toast('Playing on the TV'))}
+st();board();{const T={'#features':1,'#demos':2,'#settings':3};if(T[location.hash])tab(T[location.hash])}
+setInterval(st,3000);setInterval(()=>{if(cur==0)board();if(cur==1)health()},12000);
+</script></body></html>
