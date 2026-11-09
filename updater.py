@@ -116,9 +116,61 @@ def _roll_back():
     _systemctl("restart", "sportsball")
 
 
+HD_URL = "https://github.com/matthewbu2/sportsball-hd-releases/releases/latest/download"
+HD_DIR = os.path.join(HOME, "hd")
+HD_UNITS = ("sportsball-hd.service", "sportsball-hd-update.service", "sportsball-hd-update.timer")
+
+
+def ensure_hd():
+    """Put the HD look next to this one (switched off), so the remote's Look
+    picker offers both. Signed like our own releases (same key) and must say
+    PRODUCT hd. Done once: after that HD updates itself (its own timer)."""
+    if os.path.exists(os.path.join(HD_DIR, "main.py")):
+        return
+    meta = requests.get(HD_URL + "/latest.json", timeout=20).json()
+    blob = requests.get(HD_URL + "/" + meta["file"], timeout=180).content
+    _verify(meta, blob)
+    tmp = HD_DIR + ".new"
+    if os.path.exists(tmp):
+        shutil.rmtree(tmp)
+    with tarfile.open(fileobj=io.BytesIO(blob)) as tf:
+        tf.extractall(tmp, filter="data")
+    try:
+        with open(os.path.join(tmp, "PRODUCT")) as f:
+            if f.read().strip() != "hd":
+                raise ValueError("not an HD release")
+    except OSError:
+        raise ValueError("not an HD release") from None
+    if current_version(tmp) != meta["version"]:
+        raise ValueError("HD release VERSION doesn't match latest.json")
+    # carry this ticker's settings over (teams, favorites, sound...)
+    mine = os.path.join(LIVE, "config.json")
+    if os.path.exists(mine):
+        with open(mine) as f:
+            cfg = json.load(f)
+        cfg.pop("update_url", None)
+        with open(os.path.join(tmp, "config.json"), "w") as f:
+            json.dump(cfg, f, indent=1)
+    os.replace(tmp, HD_DIR)
+    units = os.path.join(HOME, ".config/systemd/user")
+    os.makedirs(units, exist_ok=True)
+    for name in HD_UNITS:
+        src = os.path.join(HD_DIR, "setup", name)
+        if os.path.exists(src):
+            shutil.copy(src, units)
+    _systemctl("daemon-reload")
+    _systemctl("enable", "--now", "sportsball-hd-update.timer")      # HD keeps itself up to date
+    log(f"installed the HD look {meta['version']} (switched off; pick it in the remote's Look section)")
+
+
 def run(force=False):
     sys.path.insert(0, HERE)
     import settings
+    if settings.get("auto_update") or force:
+        try:
+            ensure_hd()
+        except Exception as e:  # noqa: BLE001 -- never let this block our own update
+            log(f"HD look not installed: {e!r}")
     url = (settings.get("update_url") or "").rstrip("/")
     if not url:
         log("no update_url set")
