@@ -93,6 +93,8 @@ class Game:
     # Stat leaders: (side, category, player, display) -- side 0 game-wide
     # (football), 1 away, 2 home.
     leaders: list = field(default_factory=list)
+    # Every leader ESPN lists, with photo: (side, stat name, player, line, headshot) -- the HD recap card
+    stars: list = field(default_factory=list)
     event_id: str = ""
     away_id: str = ""
     home_id: str = ""
@@ -255,6 +257,17 @@ _LEADER_LABELS = {"passingYards": "PASS", "rushingYards": "RUSH", "receivingYard
 def _add_leader(g, side, L):
     cat = _LEADER_LABELS.get(L.get("name"))
     top = (L.get("leaders") or [None])[0]
+    if top:
+        a = top.get("athlete") or {}
+        head = a.get("headshot")
+        head = head.get("href", "") if isinstance(head, dict) else (head or "")
+        sside = side
+        if not sside:
+            tid = str((top.get("team") or a.get("team") or {}).get("id", ""))
+            sside = 1 if tid and tid == g.away_id else 2 if tid and tid == g.home_id else 0
+        name = ascii_text(a.get("shortName") or a.get("displayName") or "")
+        if name:
+            g.stars.append((sside, L.get("name") or "", name, ascii_text(top.get("displayValue") or ""), head))
     if not cat or not top or (cat == "AST" and g.sport_idx == 4):
         return
     name = ascii_text(((top.get("athlete") or {}).get("shortName")) or "")

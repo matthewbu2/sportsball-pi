@@ -6,6 +6,11 @@ runs at a time (both want the screen, the sound and port 8080).
     current()            -> the one that is switched on
     switch_to(name)      -> carries the settings over, then a systemd job
                             stops this one and starts the other
+    wanted()             -> the look the owner picked (remote or setup page), or None
+    handoff(me, cfg)     -> called every few seconds by the running look:
+                            setup screens (Wi-Fi hotspot, phone setup) are the
+                            classic look's job, so HD lends it the screen
+                            while they are needed, and classic gives it back
 
 The same file is in both projects; keep them identical.
 """
@@ -21,6 +26,8 @@ LOOKS = {
 }
 UNIT_DIR = os.path.join(HOME, ".config", "systemd", "user")
 KEEP_OWN = {"update_url"}          # settings each version keeps for itself
+PREF = os.path.join(HOME, ".config", "sportsball", "look")    # the look the owner picked
+WIFI_STATUS = "/run/sportsball/wifi.json"                      # wifi_setup.py (root side)
 
 
 def installed():
@@ -67,11 +74,59 @@ def _carry_settings(src, dst):
     os.replace(tmp, path)
 
 
-def switch_to(name):
+def wanted():
+    """The owner's pick, or None if nobody has picked (then nothing moves)."""
+    try:
+        with open(PREF) as f:
+            return f.read().strip() or None
+    except OSError:
+        return None
+
+
+def _remember(name):
+    os.makedirs(os.path.dirname(PREF), exist_ok=True)
+    with open(PREF + ".tmp", "w") as f:
+        f.write(name + "\n")
+    os.replace(PREF + ".tmp", PREF)
+
+
+def setup_needed(cfg):
+    """The TV has to show setup screens: the Wi-Fi hotspot is up, or nobody
+    has done the phone setup yet. cfg = the running look's settings.get."""
+    try:
+        with open(WIFI_STATUS) as f:
+            if json.load(f).get("mode") in ("setup", "joining"):
+                return True
+    except (OSError, ValueError):
+        pass
+    return not cfg("setup_done") and not cfg("favorites")
+
+
+_handed = False
+
+
+def handoff(me, cfg):
+    """See the module doc. Returns True once a switch has been started."""
+    global _handed
+    if _handed:
+        return False
+    if me == "hd" and setup_needed(cfg) and "classic" in installed():
+        print("[Look] setup screens needed: handing the TV to the classic look", flush=True)
+        _handed = switch_to("classic", remember=False)
+    elif me == "classic" and wanted() == "hd" and not setup_needed(cfg) and "hd" in installed():
+        print("[Look] setup done: back to the HD look", flush=True)
+        _handed = switch_to("hd")
+    return _handed
+
+
+def switch_to(name, remember=True):
     """Hand the screen to the other look (returns at once; this process is
-    stopped a second later by a transient systemd job)."""
+    stopped a second later by a transient systemd job). remember=False: a
+    loan for the setup screens; the owner's pick stays."""
     if name not in installed():
         raise ValueError(f"{name} is not installed")
+    if remember:
+        _remember(name)
     cur = current()
     if name == cur:
         return False

@@ -67,116 +67,11 @@ def _page_html():
         return f.read()
 
 
-_SETUP = """<!doctype html><html><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><title>Sportsball setup</title>
-<style>
-:root{--bg:#0b0d12;--card:#151a26;--line:#2c3448;--fg:#e8e8e8;--dim:#8a93a6;--acc:#ffd400}
-*{box-sizing:border-box}body{background:var(--bg);color:var(--fg);font:17px system-ui,sans-serif;margin:0 auto;padding:18px;max-width:560px}
-h1{font-size:21px;color:var(--acc);letter-spacing:.06em;margin:0}h2{font-size:22px;margin:18px 0 6px}
-.dim{color:var(--dim);font-size:15px}.steps{color:var(--dim);font-size:14px;margin-top:2px}
-.opt{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin:8px 0}
-.opt input{width:22px;height:22px;accent-color:var(--acc)}.opt b{display:block}.opt span{color:var(--dim);font-size:14px}
-input[type=search],#au,#ap,#ap2,#tn{width:100%;font-size:17px;padding:12px;border-radius:10px;border:1px solid var(--line);background:#1b2030;color:#fff;margin:8px 0}
-#list{max-height:46vh;overflow-y:auto;border:1px solid var(--line);border-radius:12px}
-.t{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line)}.t img{width:32px;height:32px}
-.t .s{margin-left:auto;color:var(--dim);font-size:13px}.t.on{background:#2a2a10}.t.on .s{color:var(--acc)}
-#chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;min-height:10px}.chip{background:var(--acc);color:#000;border-radius:16px;padding:5px 12px;font-size:15px}
-.nav{display:flex;gap:10px;margin-top:18px}button{flex:1;font-size:17px;padding:14px;border-radius:12px;border:1px solid var(--line);background:#1b2030;color:#fff}
-button.go{background:var(--acc);color:#000;font-weight:600}.step{display:none}.step.on{display:block}
-a{color:var(--acc)}
-</style></head><body><h1>SPORTSBALL</h1><div class=steps id=steps></div>
+def _setup_html():
+    """The phone setup page (web/setup.html, shared by both looks)."""
+    with open(os.path.join(HERE, "web", "setup.html"), encoding="utf-8") as f:
+        return f.read()
 
-<div class="step on"><div id=lookstep hidden><h2>Pick a look</h2><p class=dim>You can switch any time on the remote page.</p>
-<label class=opt><input type=radio name=look value=hd><div><b>HD broadcast</b><span>A TV-network look: 3D court, field and rink with every play drawn on it, standings and news</span></div></label>
-<label class=opt><input type=radio name=look value=classic><div><b>Classic 8-bit</b><span>The retro LED scoreboard: scrolling scores and Tecmo-style animations</span></div></label></div>
-<h2>Name this ticker</h2><p class=dim>Its address on your network. Each ticker in the house needs its own name, like <i>den</i> or <i>basement</i>.</p>
-<input id=tn autocapitalize=none autocomplete=off spellcheck=false oninput="tnShow()"><p class=dim id=tnp></p>
-<h2>What do you want to follow?</h2><p class=dim>Every game of each sport you pick shows on the ticker. Sports out of season just stay quiet.</p>
-<div id=sports></div><div class=nav><button class=go onclick="next()">Next</button></div></div>
-
-<div class=step><h2>Your favorite teams</h2><p class=dim>Favorites get their own section, a countdown to the next game, full celebrations when they score, and the TV can switch on before they play. Tap to add or remove. You can skip this.</p>
-<div id=chips></div><input type=search id=q placeholder="Search teams" oninput="draw()"><div id=list><p class=dim style="padding:12px">Loading teams...</p></div>
-<div class=nav><button onclick="back()">Back</button><button class=go onclick="next()">Next</button></div></div>
-
-<div class=step><h2>Sound</h2><p class=dim>It plays through the TV speakers.</p>
-<label class=opt><input type=radio name=snd value=all checked><div><b>Effects and announcer</b><span>Crowd noise and a voice reading the plays</span></div></label>
-<label class=opt><input type=radio name=snd value=fx><div><b>Effects only</b><span>Crowd noise and horns, no voice</span></div></label>
-<label class=opt><input type=radio name=snd value=off><div><b>No sound</b><span>You can turn it on later</span></div></label>
-<h2>How do you watch games?</h2><p class=dim>So a touchdown shows on the ticker when you see it on TV, not before.</p>
-<label class=opt><input type=radio name=dly value=10 checked><div><b>Cable or antenna</b><span>About 10 seconds behind</span></div></label>
-<label class=opt><input type=radio name=dly value=45><div><b>Streaming (YouTube TV, Hulu, Peacock...)</b><span>About 45 seconds behind</span></div></label>
-<label class=opt><input type=radio name=dly value=0><div><b>I'm not watching along</b><span>Scores as fast as they come</span></div></label>
-<div class=nav><button onclick="back()">Back</button><button class=go id=fin onclick="soundNext()">Next</button></div></div>
-
-<div class=step><h2>Your login (optional)</h2><p class=dim>For tinkering: a user name and password to log in to the ticker over SSH (<code>ssh you@<span class=hn>@HOST_ONLY@</span></code>). It's an admin account, so pick a good password. It stays on the ticker; nobody else gets it. You can only make it now, during setup. Most people skip this.</p>
-<input id=au placeholder="User name (lowercase)" autocapitalize=none autocomplete=off spellcheck=false>
-<input id=ap type=password placeholder="Password (8 or more characters)" autocomplete=new-password>
-<input id=ap2 type=password placeholder="Password again" autocomplete=new-password>
-<p class=dim id=aerr style="color:#ff7a7a"></p>
-<div class=nav><button onclick="back()">Back</button><button onclick="finish()">Skip</button><button class=go id=mk onclick="makeLogin()">Create</button></div></div>
-
-<div class=step id=done><h2>All set!</h2><p>Look at the TV: your games are coming up. Scores update every few seconds.</p>
-<p class=dim>Change anything later on the remote page, <a href="/">@HOST@</a>. Bookmark it, or scan the code on the ticker's REMOTE card.</p><p class=dim id=made></p></div>
-
-<script>
-const SPORTS=[[1,'NFL','Pro football'],[5,'College football','Top 25 and your favorites'],[3,'MLB','Baseball'],[2,'NBA','Pro basketball'],[4,'NHL','Hockey'],[6,'College basketball','Men’s']];
-let cfg={},teams={},favs=[],step=0,login=false;
-const DONE=4;
-const $=id=>document.getElementById(id);
-function steps(){const n=login?4:3;$('steps').textContent=step<DONE?'Step '+(step+1)+' of '+n:'';document.querySelectorAll('.step').forEach((s,i)=>s.classList.toggle('on',i==step));scrollTo(0,0)}
-function chosen(){return [...document.querySelectorAll('#sports input:checked')].map(i=>Number(i.value))}
-function slug(v){return v.toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,32)}
-function tnShow(){const s=slug($('tn').value);$('tnp').textContent=s?'http://'+s+'.local:@PORT@':'Pick a name';
- if(s)document.querySelectorAll('.hn').forEach(e=>e.textContent=s+'.local')}
-let host='';
-function next(){if(step==0){if(!chosen().length)return alert('Pick at least one sport');if(!slug($('tn').value))return alert('Pick a name');loadTeams()}step++;steps()}
-function back(){step--;steps()}
-function loadTeams(){Promise.all(chosen().map(s=>teams[s]?null:fetch('/teams?sport='+s).then(r=>r.json()).then(l=>teams[s]=l).catch(()=>teams[s]=[]))).then(draw)}
-function draw(){const q=$('q').value.trim().toLowerCase(),seen=new Set(),rows=[];
- for(const s of chosen())for(const t of teams[s]||[]){if(seen.has(t.name))continue;seen.add(t.name);
-  if(!q||t.name.toLowerCase().includes(q)||t.abbr.toLowerCase()==q)rows.push([s,t])}
- const order=s=>SPORTS.findIndex(x=>x[0]==s);
- rows.sort((a,b)=>(favs.includes(b[1].name)-favs.includes(a[1].name))||order(a[0])-order(b[0])||a[1].name.localeCompare(b[1].name));
- const L=$('list');L.innerHTML='';if(!rows.length)L.innerHTML='<p class=dim style="padding:12px">No teams found</p>';
- rows.slice(0,150).forEach(([s,t])=>{const d=document.createElement('div');d.className='t'+(favs.includes(t.name)?' on':'');
-  const img=document.createElement('img');img.src=t.logo||'';img.alt='';img.loading='lazy';const n=document.createElement('span');n.textContent=t.name;
-  const st=document.createElement('span');st.className='s';st.textContent=favs.includes(t.name)?'FAVORITE':SPORTS.find(x=>x[0]==s)[1];
-  d.append(img,n,st);d.onclick=()=>{favs=favs.includes(t.name)?favs.filter(f=>f!=t.name):favs.concat(t.name);draw()};L.appendChild(d)});
- $('chips').innerHTML='';favs.forEach(f=>{const c=document.createElement('span');c.className='chip';c.textContent=f;$('chips').appendChild(c)})}
-function soundNext(){if(login){step=3;steps()}else finish()}
-function makeLogin(){const u=$('au').value.trim(),p=$('ap').value;$('aerr').textContent='';
- if(!/^[a-z][a-z0-9_-]{0,30}$/.test(u))return $('aerr').textContent='User name: lowercase letters and numbers, starting with a letter.';
- if(p.length<8)return $('aerr').textContent='The password needs at least 8 characters.';
- if(p!=$('ap2').value)return $('aerr').textContent='The two passwords are different.';
- $('mk').disabled=true;$('mk').textContent='Creating...';
- fetch('/account',{method:'POST',body:JSON.stringify({user:u,password:p})}).then(r=>r.json()).then(r=>{
-  $('ap').value=$('ap2').value='';
-  if(!r.ok){$('aerr').textContent=r.error;$('mk').disabled=false;$('mk').textContent='Create';return}
-  $('made').textContent='Your login: ssh '+r.user+'@'+(slug($('tn').value)||host)+'.local';finish()})
- .catch(()=>{$('aerr').textContent='Could not reach the ticker. Try again.';$('mk').disabled=false;$('mk').textContent='Create'})}
-function finish(){const n=slug($('tn').value);
- if(n&&n!=host){fetch('/name',{method:'POST',body:JSON.stringify({name:n})}).then(r=>r.json()).then(r=>{
-  if(!r.ok)return alert(r.error);host=n;const u='http://'+n+'.local:@PORT@';const a=document.querySelector('#done a');a.href=u;a.textContent=n+'.local:@PORT@';saveAll()})
-  .catch(()=>alert('Could not reach the ticker. Try again.'));return}
- saveAll()}
-let lookNow='';
-fetch('/status').then(r=>r.json()).then(s=>{const ls=s.looks||[];if(ls.length<2)return;$('lookstep').hidden=false;
- const cur=ls.find(l=>l[2]);lookNow=cur?cur[0]:'';const i=document.querySelector('input[name=look][value="'+lookNow+'"]');if(i)i.checked=true}).catch(()=>{});
-function pickLook(){const i=document.querySelector('input[name=look]:checked');if(!i||!lookNow||i.value==lookNow)return;
- fetch('/style/'+i.value,{method:'POST'}).then(()=>{const p=document.createElement('p');p.className='dim';
-  p.textContent='Switching the TV to the '+(i.value=='hd'?'HD broadcast':'Classic 8-bit')+' look. It takes about 20 seconds.';$('done').appendChild(p)})}
-function saveAll(){const snd=document.querySelector('input[name=snd]:checked').value;
- const o={teams:chosen().map(s=>[s,'']),favorites:favs.join(', '),sound_fx:snd!='off',announcer:snd=='all',muted:false,
-  delay:Number(document.querySelector('input[name=dly]:checked').value),setup_done:true};
- $('fin').disabled=true;fetch('/settings',{method:'POST',body:JSON.stringify(o)}).then(r=>{if(!r.ok)throw 0;step=DONE;steps();pickLook()})
-  .catch(()=>{alert('Could not save. Is the ticker still on?');$('fin').disabled=false})}
-fetch('/account').then(r=>r.json()).then(a=>{login=a.available;steps()}).catch(()=>{});
-fetch('/name').then(r=>r.json()).then(n=>{host=n.name;$('tn').value=n.suggest||n.name;tnShow()}).catch(()=>{});
-fetch('/settings').then(r=>r.json()).then(c=>{cfg=c;const have=new Set(c.teams.map(t=>t[0]));favs=(c.favorites||'').split(',').map(s=>s.trim()).filter(Boolean);
- $('sports').innerHTML=SPORTS.map(([v,n,d])=>'<label class=opt><input type=checkbox value='+v+(have.has(v)?' checked':'')+'><div><b>'+n+'</b><span>'+d+'</span></div></label>').join('');
- const dl=document.querySelector('input[name=dly][value="'+c.delay+'"]');if(dl)dl.checked=true;
- const sv=c.muted||!c.sound_fx?'off':c.announcer?'all':'fx';document.querySelector('input[name=snd][value='+sv+']').checked=true;steps()})
-</script></body></html>"""
 
 _teams_cache = {}
 ACCOUNT_DIR = "/run/sportsball/account"    # handed to the root side (account.py)
@@ -330,7 +225,7 @@ def _page():
             parts.append(f"<h2>{title}</h2><div class=g>{btns}</div>")
     import announcer
     voices = "".join(f'<option value="{v}">{label}</option>' for v, label in announcer.VOICES.items())
-    return _page_html().replace("@FLAVOR@", FLAVOR).replace("@DEMOS@", "".join(parts)).replace("@VOICES@", voices).replace("@SPORTS@", json.dumps(list(SPORT_LABELS))).encode()
+    return _page_html().replace("@FLAVOR@", FLAVOR).replace("@REPLAYS@", "").replace("@DEMOS@", "".join(parts)).replace("@VOICES@", voices).replace("@SPORTS@", json.dumps(list(SPORT_LABELS))).encode()
 
 
 class _Handler(BaseHTTPRequestHandler):
@@ -371,12 +266,15 @@ class _Handler(BaseHTTPRequestHandler):
                 return self._json(_health())
             self._json({"games": len(games), "live": sum(1 for g in games if g.state == IN), "playing": playing,
                         "pinned": _crawl.pinned, "cec": cec.state, "version": updater.current_version(),
-                        "muted": settings.get("muted"), "looks": style.labels(),
+                        "muted": settings.get("muted"), "looks": style.labels(), "look_wanted": style.wanted(), "setup_done": bool(settings.get("setup_done") or settings.get("favorites")),
                         "now": _crawl.now_info() if hasattr(_crawl, "now_info") else None,
                         "features": [(k, label, bool(settings.get(k)) == on) for k, label, on in FEATURES],
                         "card": f"{_CARD_NAMES[_crawl.cards[_crawl.cur].type]} {_crawl.cur + 1}/{len(_crawl.cards)}"})
         elif self.path == "/board":
             self._json(_crawl.board() if hasattr(_crawl, "board") else [])
+        elif self.path in ("/look/hd.jpg", "/look/classic.jpg"):     # the setup page's previews
+            with open(os.path.join(HERE, "web", "look-" + self.path[6:]), "rb") as f:
+                self._send(200, f.read(), "image/jpeg")
         elif self.path.startswith("/font/"):
             name = os.path.basename(self.path[6:])
             path = os.path.join(HERE, "assets", "fonts", name)
@@ -398,7 +296,7 @@ class _Handler(BaseHTTPRequestHandler):
             self._json(_names())
         elif self.path.startswith("/setup"):
             import socket
-            self._send(200, _SETUP.replace("@HOST@", f"{socket.gethostname()}.local:{PORT}").replace("@HOST_ONLY@", f"{socket.gethostname()}.local").replace("@PORT@", str(PORT)).encode(),
+            self._send(200, _setup_html().replace("@HOST@", f"{socket.gethostname()}.local:{PORT}").replace("@HOST_ONLY@", f"{socket.gethostname()}.local").replace("@PORT@", str(PORT)).encode(),
                        "text/html; charset=utf-8")
         elif self.path.startswith("/teams?sport="):
             try:
@@ -423,9 +321,17 @@ class _Handler(BaseHTTPRequestHandler):
             cmd = ("demo", name)
         elif self.path == "/settings":
             try:
-                settings.update(json.loads(body))
-            except (ValueError, TypeError) as e:
+                new = json.loads(body)
+                look = new.pop("look", None)          # the setup page's "Pick a look"
+                if look and look not in style.installed():
+                    raise ValueError(f"{look} is not installed")
+            except (ValueError, TypeError, AttributeError) as e:
                 return self._send(400, str(e).encode())
+            if look:
+                style._remember(look)    # before setup_done lands, so classic hands back the right way
+            settings.update(new)
+            if look:
+                style.switch_to(look)    # after: carries the finished setup over
             return self._send(200, b"ok")
         elif self.path in ("/pin", "/skip", "/voice/test", "/livedemo"):
             cmd = (self.path.strip("/"), None)

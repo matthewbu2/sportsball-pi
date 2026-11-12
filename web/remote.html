@@ -237,7 +237,7 @@ nav button.on:before{content:"";position:absolute;top:-9px;width:28px;height:3px
 </section>
 
 <!-- DEMOS -->
-<section class=view id=v2><p class=note style="margin-top:4px">Plays a scoring animation on the TV right now.</p><div id=demos>@DEMOS@</div></section>
+<section class=view id=v2>@REPLAYS@<p class=note style="margin-top:4px">Plays a scoring animation on the TV right now.</p><div id=demos>@DEMOS@</div></section>
 
 <!-- SETTINGS -->
 <section class=view id=v3><form id=f onsubmit="saveSettings();return false">
@@ -338,11 +338,14 @@ function snap(){const i=$('snap');toast('Grabbing the TV picture');i.onload=()=>
 function look(k,label){if(!S.looks)return;const c=S.looks.find(l=>l[2]);if(c&&c[0]==k)return;
  if(!confirm('Switch the TV to '+label+'?'))return;post('/style/'+k).then(()=>{toast('Switching to '+label);setTimeout(()=>location.reload(),20000)})}
 // ---------------- features
-const GROUPS={muted:'sound',announcer:'sound',announce_every:'sound',roundups:'sound',pregame:'sound',jumbotron:'screen',red_zone:'screen',saver:'screen',info_cards:'info',info_live:'info',info_news:'info',info_standings:'info',info_rankings:'info'};
-const CHILD={announce_every:'announcer',roundups:'announcer',pregame:'announcer',info_live:'info_cards',info_news:'info_cards',info_standings:'info_cards',info_rankings:'info_cards'};
+const GROUPS={muted:'sound',announcer:'sound',announce_every:'sound',roundups:'sound',pregame:'sound',jumbotron:'screen',red_zone:'screen',saver:'screen',info_cards:'info',info_live:'info',info_news:'info',info_standings:'info',info_rankings:'info',info_teams:'info',info_weather:'info',crunch_time:'screen',recaps:'screen',eco_fps:'screen'};
+const CHILD={announce_every:'announcer',roundups:'announcer',pregame:'announcer',info_live:'info_cards',info_news:'info_cards',info_standings:'info_cards',info_rankings:'info_cards',info_teams:'info_cards',info_weather:'info_cards'};
 const HINT={muted:'Everything through the TV speakers',announcer:'Calls the big moments like a broadcaster',announce_every:'Routine plays too, not just the big ones',
  roundups:'Scores from around the league now and then',jumbotron:'Retro 8-bit scoreboard replays when someone scores',info_cards:'Standings, rankings and news between games',
- info_live:'Also once per trip around the live games',pregame:'Kickoff in 15 minutes for your favorites',red_zone:'Cut to football drives inside the 20',saver:'Animations overnight, silent',info_news:'Headlines with photos',info_standings:'Division and conference tables',info_rankings:'AP Top 25 for college'};
+ info_live:'Also once per trip around the live games',pregame:'Kickoff in 15 minutes for your favorites',red_zone:'Cut to football drives inside the 20',saver:'Animations overnight, silent',info_news:'Headlines with photos',info_standings:'Division and conference tables',info_rankings:'AP Top 25 for college',
+ info_teams:'Records, standing and next game for your favorites',info_weather:'Local weather and the next few days',
+ crunch_time:'Cuts to close games late (last few minutes, overtime) and stays there',recaps:'Final score, top players and the deciding play',
+ eco_fps:'30 fps when nothing is moving: a cooler, quieter Pi'};
 function feat(fs){if(!fs)return;const on={};fs.forEach(f=>on[f[0]]=f[2]);
  for(const g of ['sound','screen','info']){const box=$('fg_'+g);if(box.children.length)continue;
   const mine=fs.filter(f=>(GROUPS[f[0]]||'screen')==g);box.hidden=!mine.length;box.previousElementSibling.hidden=!mine.length;
@@ -381,6 +384,9 @@ function saveSettings(){const f=$('f'),o={};
  o.teams=[...document.querySelectorAll('.team')].map(d=>[Number(d.querySelector('select').value),d.querySelector('input').value]).filter(t=>t[0]>0);
  fetch('/settings',{method:'POST',body:JSON.stringify(o)}).then(r=>{toast(r.ok?'Settings saved':'Could not save');load()}).catch(()=>toast('Can not reach the ticker'))}
 function go(n){post('/demo/'+n).then(()=>toast('Playing on the TV'))}
+function replay(n){post('/replay/'+n).then(()=>{toast('Finding a game…');let k=0;const w=setInterval(()=>{fetch('/replay').then(r=>r.json()).then(j=>{
+ if(j.on){clearInterval(w);toast('Replaying '+j.on)}else if(!j.loading&&(j.msg||++k>40)){clearInterval(w);toast(j.msg||'No game found')}})},1500)})}
+function replayStop(){post('/replay/stop').then(()=>toast('Back to live scores'))}
 st();board();{const T={'#features':1,'#demos':2,'#settings':3};if(T[location.hash])tab(T[location.hash])}
 setInterval(st,3000);setInterval(()=>{if(cur==0)board();if(cur==1)health()},12000);
 </script></body></html>

@@ -20,8 +20,10 @@
 3. Pick your home Wi-Fi and type its password. The TV says **CONNECTING**.
    (Wrong password: the welcome screen comes back with an error.)
 4. Switch the phone back to your home Wi-Fi. The TV shows **SCAN TO PICK YOUR TEAMS**.
-   Scan it and answer three questions: which sports (and a name for the ticker),
-   your favorite teams, and sound (plus how far behind your TV picture is). That's it.
+   Scan it and answer a few questions: the look (**HD broadcast** or **Classic 8-bit**,
+   with a picture of each), a name for the ticker and which sports, your favorite teams,
+   and sound (plus how far behind your TV picture is). Tap Done and the TV switches to
+   the look you picked. That's it.
    The name is its network address (`den` -> http://den.local:8080). Every ticker in
    one house needs its own; if another already uses `sportsball`, setup suggests
    `sportsball-2`. Rename later with **Run the first-time setup again**.
@@ -36,7 +38,11 @@ web remote at http://sportsball.local:8080 (the REMOTE card on the ticker has a 
 for it), including **Run the first-time setup again**.
 
 If the ticker loses Wi-Fi for two minutes (moved house, new router), the setup hotspot
-comes back by itself.
+comes back by itself. (The setup screens always come from the classic look; with HD
+picked, the TV shows classic while the hotspot is up, then goes back to HD.)
+
+Both looks are on the card. Switch any time on the remote page (Look), or run the
+first-time setup again.
 
 ## Which Pis
 
@@ -48,8 +54,9 @@ The Pi 1, the original Zero / Zero W and early Pi 2 boards can't run it.
 
 ## Looking after itself
 
-- New ticker versions install at about 3:05 every night (signed releases from
-  github.com/matthewbu2/sportsball-pi; a version that doesn't run steadily is rolled back).
+- New versions install every night, classic at about 3:05 and HD at about 3:15 (signed
+  releases from github.com/matthewbu2/sportsball-pi and sportsball-hd-releases; a version
+  that doesn't run steadily is rolled back).
 - Raspberry Pi OS updates install at 2:30, and the Pi restarts at 3:30.
 - With the TV off, the ticker waits for the screen instead of failing.
 

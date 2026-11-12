@@ -30,6 +30,7 @@ import extras
 import logos
 import panel as P
 import settings
+import style
 import weather
 from espn import IN, NUM_SPORTS, PRE, SPORT_LABELS, FetchError, parse_favs
 from ticker import Ticker, pass_seconds
@@ -611,6 +612,10 @@ def run_screen():
         if now - wifi_at > 2:
             wifi_at = now
             crawl.override = wifi_message()
+            try:
+                style.handoff("classic", settings.get)   # setup finished: back to the look they picked
+            except Exception as e:  # noqa: BLE001
+                print(f"[Look] {e}", flush=True)
         if now - slow_at > 60:
             slow_at = now
             C.REMOTE_URLS = remote_urls()

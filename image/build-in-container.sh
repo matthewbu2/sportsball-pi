@@ -53,9 +53,14 @@ echo "== ticker $VER"
 mkdir -p /work/t
 tar xzf /dist/sportsball.tar.gz -C /work/t
 [ "$(cat /work/t/VERSION)" = "$VER" ]
+echo "== HD look $HD_VER"
+mkdir -p /work/h
+tar xzf /dist-hd/sportsball-hd.tar.gz -C /work/h
+[ "$(cat /work/h/VERSION)" = "$HD_VER" ] && [ "$(cat /work/h/PRODUCT)" = hd ]
 
 echo "== packages and setup (arm64 chroot)"
 cp -a /work/t "$R/tmp/ticker"
+cp -a /work/h "$R/tmp/hd"
 chroot "$R" /bin/bash -eu <<'CHROOT'
 export DEBIAN_FRONTEND=noninteractive
 apt-get -qq update
@@ -74,6 +79,7 @@ useradd -m -s /bin/bash -G video,render,audio,input,netdev sportsball
 passwd -l sportsball >/dev/null
 H=/home/sportsball
 mv /tmp/ticker $H/ticker
+mv /tmp/hd $H/hd               # the HD look, switched off until the setup page picks it (style.py)
 # (~/.asoundrc, the TV's HDMI sound device, is written by the ticker when it starts.)
 U=$H/.config/systemd/user
 mkdir -p $U/default.target.wants $U/timers.target.wants
@@ -82,6 +88,8 @@ for f in $H/ticker/setup/*.service $H/ticker/setup/*.timer; do
 done
 ln -s ../sportsball.service $U/default.target.wants/sportsball.service
 ln -s ../sportsball-selfupdate.timer $U/timers.target.wants/sportsball-selfupdate.timer
+for f in sportsball-hd.service sportsball-hd-update.service sportsball-hd-update.timer; do cp $H/hd/setup/$f $U/; done
+ln -s ../sportsball-hd-update.timer $U/timers.target.wants/sportsball-hd-update.timer   # HD updates itself too
 mkdir -p /var/lib/systemd/linger && touch /var/lib/systemd/linger/sportsball   # runs without anyone logged in
 chown -R sportsball:sportsball $H
 
@@ -95,7 +103,9 @@ sed -i 's/\braspberrypi\b/sportsball/g' /etc/hosts
 CHROOT
 
 # The chroot must really have worked (a broken emulator can fail quietly).
-for f in home/sportsball/ticker/main.py usr/lib/python3/dist-packages/pygame/__init__.py \
+for f in home/sportsball/ticker/main.py home/sportsball/hd/main.py home/sportsball/hd/web/setup.html \
+         home/sportsball/.config/systemd/user/sportsball-hd.service \
+         home/sportsball/.config/systemd/user/timers.target.wants/sportsball-hd-update.timer usr/lib/python3/dist-packages/pygame/__init__.py \
          home/sportsball/.config/systemd/user/default.target.wants/sportsball.service \
          var/lib/systemd/linger/sportsball etc/systemd/system/multi-user.target.wants/sportsball-wifi.service \
          etc/systemd/system/timers.target.wants/sportsball-update.timer; do
@@ -106,6 +116,7 @@ chroot "$R" python3 -c "import pygame, numpy, PIL, requests, cryptography" || { 
 # The setup page's optional login needs SSH that takes passwords.
 [ -e "$R/usr/sbin/sshd" ] || { echo "BUILD FAILED: no openssh-server"; exit 1; }
 ! grep -rqsi '^ *PasswordAuthentication *no' "$R/etc/ssh/sshd_config" "$R/etc/ssh/sshd_config.d" || { echo "BUILD FAILED: SSH passwords off"; exit 1; }
+[ ! -e "$R/home/sportsball/.config/systemd/user/default.target.wants/sportsball-hd.service" ] || { echo "BUILD FAILED: HD switched on (classic runs the setup)"; exit 1; }
 [ -e "$R/home/sportsball/ticker/account.py" ] || { echo "BUILD FAILED: account.py missing"; exit 1; }
 [ -e "$R/usr/lib/aarch64-linux-gnu/libGL.so.1" ] || { echo "BUILD FAILED: libGL missing (SDL needs desktop GL on the Pi 3)"; exit 1; }
 

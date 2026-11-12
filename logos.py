@@ -12,6 +12,7 @@ import io
 import os
 import queue
 import threading
+import time
 from urllib.parse import urlsplit
 
 import numpy as np
@@ -40,6 +41,20 @@ def _to_array(data):
     return np.asarray(Image.alpha_composite(bg, im).convert("RGB")).copy()
 
 
+def _get(url, params=None):
+    """ESPN's image CDN drops idle keep-alive connections ("connection reset
+    by peer"): retry on a fresh connection."""
+    import requests
+    for attempt in range(3):
+        try:
+            return SESSION.get(url, params=params, timeout=10)
+        except requests.ConnectionError:
+            if attempt == 2:
+                raise
+            SESSION.close()
+            time.sleep(0.5 + attempt)
+
+
 def _load(url):
     p = _path(url)
     if os.path.exists(p):
@@ -49,10 +64,9 @@ def _load(url):
         except Exception:  # noqa: BLE001 - torn by a power cut: fetch it again
             os.unlink(p)
     path = urlsplit(url).path
-    r = SESSION.get("https://a.espncdn.com/combiner/i",
-                    params={"img": path, "w": LOGO_SIZE, "h": LOGO_SIZE}, timeout=10)
+    r = _get("https://a.espncdn.com/combiner/i", params={"img": path, "w": LOGO_SIZE, "h": LOGO_SIZE})
     if r.status_code != 200:   # not every image goes through the combiner
-        r = SESSION.get(url, timeout=10)
+        r = _get(url)
     r.raise_for_status()
     arr = _to_array(r.content)
     os.makedirs(CACHE_DIR, exist_ok=True)
