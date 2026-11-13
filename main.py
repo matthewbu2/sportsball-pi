@@ -21,6 +21,8 @@ import threading
 import time
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "vendor"))
+import logstamp  # noqa: E402
+logstamp.install()
 
 import anim as A
 import espn

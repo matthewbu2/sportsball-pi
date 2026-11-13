@@ -271,6 +271,8 @@ def switch_to(name, remember=True):
 
 
 if __name__ == "__main__":
+    import logstamp
+    logstamp.install()
     if sys.argv[1:2] == ["--fallback"] and len(sys.argv) > 2:
         fallback(sys.argv[2])
     else:

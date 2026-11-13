@@ -27,3 +27,4 @@ web/look-classic.jpg
 setup/sportsball-fallback@.service
 setup/sportsball-status.service
 setup/sportsball-status.timer
+logstamp.py

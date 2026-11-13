@@ -27,6 +27,10 @@ import time
 
 import requests
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import logstamp  # noqa: E402
+logstamp.install()
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 HOME = os.path.expanduser("~")
 LIVE, NEW, PREV = (os.path.join(HOME, d) for d in ("ticker", "ticker.new", "ticker.prev"))

@@ -85,9 +85,9 @@ def summary(rs):
             flags.append("BENCHED " + ",".join(k for k, v in looks.items() if v.get("broken")))
         if r.get("on") and looks.get(r["on"], {}).get("state") != "active":
             flags.append(f"{r['on']} is {looks.get(r['on'], {}).get('state')}")
-        errs = sum(len(v.get("log", {}).get("errors", [])) for v in looks.values())
+        errs = sum(v.get("log", {}).get("new_errors", len(v.get("log", {}).get("errors", []))) for v in looks.values())
         if errs:
-            flags.append(f"{errs} error lines")
+            flags.append(f"{errs} new error lines")
         if isinstance(r.get("health"), dict):
             flags.append("remote not answering")
         print(f"{r['host'][:18]:18} {ago(r['_posted']):12} {str(r.get('on')):8} "

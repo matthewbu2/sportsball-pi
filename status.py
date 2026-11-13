@@ -5,9 +5,10 @@ On by default; the owner can switch it off on the remote's Features tab
 (setting share_status). What is sent: versions of both looks, which one is
 on and which one the owner picked, crash benching (style.py), the remote's
 health table (scores, frame rate, memory, temperature, disk...) with the
-weather row's town left out, uptime, the Pi model, and the last error /
-update / look lines from the logs. Not sent: teams, favorites, notes, Wi-Fi,
-addresses.
+weather row's town left out, uptime, the Pi model, recent update / look lines
+and the error lines written since the last report that went out (logstamp.py
+dates the log lines; older undated lines never count). Not sent: teams,
+favorites, notes, Wi-Fi, addresses.
 
 The report is sealed for the maker (X25519 + AES-GCM: only the private key on
 the maker's PC opens it) and posted as a comment on issue 1 of a private
@@ -47,6 +48,10 @@ ID_FILE = os.path.join(style.HOME, ".config", "sportsball", "id")
 LOGS = {"hd": "run.log", "classic": "ticker.log"}
 HIDE_ROWS = {"Weather"}                                           # value names the town
 FORMAT = "sportsball-status v1"
+SEEN_FILE = os.path.join(style.HOME, ".config", "sportsball", "status-seen.json")   # log ends at the last report
+STAMPED = re.compile(r"^\d\d-\d\d \d\d:\d\d:\d\d ")                                 # logstamp.py
+ERROR = re.compile(r"Traceback|Error|Exception|failed|error:|\b[1-9]\d* errors")
+_marks = {}
 
 
 def log(msg):
@@ -84,21 +89,53 @@ def _read(path, default=""):
         return default
 
 
-def _log_lines(name, n_err=8, n_upd=4, n_look=4):
+def _read_from(path, pos, cap=300_000):
+    """Bytes from pos to the end (at most the last cap of them) and the end."""
+    with open(path, "rb") as f:
+        f.seek(0, 2)
+        end = f.tell()
+        f.seek(max(pos, end - cap))
+        return f.read().decode("utf-8", "replace"), end
+
+
+def _seen():
+    try:
+        with open(SEEN_FILE) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def _log_lines(name, seen, n_err=12, n_upd=4, n_look=4):
+    """Error lines written since the last report that went out (seen = the
+    log ends then), plus recent update/look lines and the last lines."""
     path = os.path.join(style.LOOKS[name]["dir"], LOGS[name])
     try:
-        with open(path, "rb") as f:
-            f.seek(0, 2)
-            f.seek(max(0, f.tell() - 300_000))
-            lines = f.read().decode("utf-8", "replace").splitlines()
+        ino = os.stat(path).st_ino
+        whole, end = _read_from(path, 0)
     except OSError:
         return {}
-    err = [ln for ln in lines if re.search(r"Traceback|Error|Exception|failed|error:|\b[1-9]\d* errors", ln)]
-    upd = [ln for ln in lines if ln.startswith("[Update]")]
-    look = [ln for ln in lines if ln.startswith("[Look]")]
+    mark = seen.get(name)
+    if mark and mark.get("ino") == ino and mark.get("pos", 0) <= end:
+        new = _read_from(path, mark["pos"])[0]
+    elif mark:                         # the log was rotated since: rest of the old one, then this one
+        new = ""
+        try:
+            if os.stat(path + ".1").st_ino == mark.get("ino"):
+                new = _read_from(path + ".1", mark.get("pos", 0))[0]
+        except OSError:
+            pass
+        new += whole
+    else:                              # first report: only lines from logs that have times
+        new = "\n".join(ln for ln in whole.splitlines() if STAMPED.match(ln))
+    _marks[name] = {"ino": ino, "pos": end}
+    lines = whole.splitlines()
+    err = [ln for ln in new.splitlines() if ERROR.search(ln)]
+    upd = [ln for ln in lines if "[Update]" in ln[:30]]
+    look = [ln for ln in lines if "[Look]" in ln[:30]]
     cut = lambda xs, n: [x[:240] for x in xs[-n:]]   # noqa: E731
-    return {"errors": cut(err, n_err), "updates": cut(upd, n_upd), "look": cut(look, n_look),
-            "last": cut(lines, 3)}
+    return {"new_errors": len(err), "errors": cut(err, n_err), "updates": cut(upd, n_upd),
+            "look": cut(look, n_look), "last": cut(lines, 3), "since_last_report": bool(mark)}
 
 
 def _local_json(path):
@@ -113,11 +150,12 @@ def _local_json(path):
 def collect():
     sc = ["systemctl", "--user"]
     looks = {}
+    seen = _seen()
     for k in style.installed():
         unit = style.LOOKS[k]["unit"]
         state = subprocess.run(sc + ["is-active", unit], capture_output=True, text=True).stdout.strip()
         looks[k] = {"version": style.version(k), "enabled": style._enabled(k), "state": state,
-                    "broken": style.broken(k), "log": _log_lines(k)}
+                    "broken": style.broken(k), "log": _log_lines(k, seen)}
     health = _local_json("/status?health")
     if isinstance(health, list):
         health = [[k, "(hidden)" if k in HIDE_ROWS else v, ok] for k, v, ok in health]
@@ -180,13 +218,19 @@ def send(report):
 
 
 def main():
+    import logstamp
+    logstamp.install()
     if "--print" in sys.argv:
         print(json.dumps(collect(), indent=1))
         return
     if not _setting("share_status", True):
         log("switched off on this ticker (share_status)")
         return
-    send(collect())
+    if send(collect()):
+        os.makedirs(os.path.dirname(SEEN_FILE), exist_ok=True)
+        with open(SEEN_FILE + ".tmp", "w") as f:
+            json.dump(_marks, f)
+        os.replace(SEEN_FILE + ".tmp", SEEN_FILE)
 
 
 if __name__ == "__main__":
