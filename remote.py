@@ -58,6 +58,7 @@ FEATURES = [   # (setting, label, on = setting True)  -- switches on the Feature
     ("pregame", "Announce favorites' kickoffs", True),
     ("red_zone", "Jump to red-zone drives", True),
     ("saver", "Overnight screensaver", True),
+    ("share_status", "Send a daily status report to the maker", True),
 ]
 
 
@@ -266,7 +267,7 @@ class _Handler(BaseHTTPRequestHandler):
                 return self._json(_health())
             self._json({"games": len(games), "live": sum(1 for g in games if g.state == IN), "playing": playing,
                         "pinned": _crawl.pinned, "cec": cec.state, "version": updater.current_version(),
-                        "muted": settings.get("muted"), "looks": style.labels(), "look_wanted": style.wanted(), "setup_done": bool(settings.get("setup_done") or settings.get("favorites")),
+                        "muted": settings.get("muted"), "looks": style.labels(), "look_wanted": style.wanted(), "look_trouble": style.trouble(), "setup_done": bool(settings.get("setup_done") or settings.get("favorites")),
                         "now": _crawl.now_info() if hasattr(_crawl, "now_info") else None,
                         "features": [(k, label, bool(settings.get(k)) == on) for k, label, on in FEATURES],
                         "card": f"{_CARD_NAMES[_crawl.cards[_crawl.cur].type]} {_crawl.cur + 1}/{len(_crawl.cards)}"})

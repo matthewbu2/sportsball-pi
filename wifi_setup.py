@@ -239,7 +239,6 @@ class _Handler(BaseHTTPRequestHandler):
 
 def portal():
     """Hotspot + setup page until a network is joined."""
-    global _error
     _done.clear()
     scan()
     hotspot_up()

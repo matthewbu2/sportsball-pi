@@ -113,7 +113,12 @@ def _roll_back():
     os.replace(LIVE, bad)
     os.replace(PREV, LIVE)
     _install_units(LIVE)
-    _systemctl("restart", "sportsball")
+    # Only if this look is still the one on: if it crash-looped meanwhile, the
+    # fallback (style.py) has already put the other look on the TV.
+    if _systemctl("is-enabled", "sportsball").strip() == "enabled":
+        _systemctl("reset-failed", "sportsball")
+        _systemctl("restart", "sportsball")
+    _systemctl("start", "--no-block", "sportsball-status.service")    # tell the maker
 
 
 HD_URL = "https://github.com/matthewbu2/sportsball-hd-releases/releases/latest/download"

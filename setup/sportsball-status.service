@@ -1,0 +1,12 @@
+# User service: status.py sends one encrypted status report to the ticker's
+# maker (setting share_status; it exits quietly when that is off). Started
+# by sportsball-status.timer, and right away after a crash fallback or an
+# update rollback. Shared by both looks (same file in both projects).
+[Unit]
+Description=Sportsball status report
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'cd %h/ticker 2>/dev/null || cd %h/hd; exec /usr/bin/python3 -u status.py'
+TimeoutStartSec=3min

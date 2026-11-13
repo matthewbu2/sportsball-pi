@@ -1,0 +1,29 @@
+# Files that must be identical in sportsball-pi (classic) and sportsball-hd.
+# check/check.py compares them with the other project before every release;
+# after editing one here, copy it across with:  ./check.sh --sync
+# One path per line (a folder means everything in it).
+SHARED
+check.sh
+check
+account.py
+anim.py
+cards.py
+cec.py
+espn.py
+extras.py
+font5x7.py
+livedemo.py
+panel.py
+sfx.py
+sprites.py
+status.py
+style.py
+wifi_setup.py
+vendor
+web/remote.html
+web/setup.html
+web/look-hd.jpg
+web/look-classic.jpg
+setup/sportsball-fallback@.service
+setup/sportsball-status.service
+setup/sportsball-status.timer

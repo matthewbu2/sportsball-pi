@@ -214,6 +214,7 @@ nav button.on:before{content:"";position:absolute;top:-9px;width:28px;height:3px
    <div class=look id=look_hd onclick="look('hd','HD broadcast')"><div class="prev hd"></div><div class=t>HD BROADCAST</div></div>
    <div class=look id=look_classic onclick="look('classic','Classic 8-bit')"><div class="prev c8"></div><div class=t>CLASSIC 8-BIT</div></div>
   </div>
+  <p class=note id=looktrouble hidden style="color:var(--gold)"></p>
   <p class=note>Same teams and settings either way. Switching restarts the screen (about 20 seconds).</p></div>
 </section>
 
@@ -222,6 +223,7 @@ nav button.on:before{content:"";position:absolute;top:-9px;width:28px;height:3px
  <div class=lbl>Sound &amp; voice</div><div class=card id=fg_sound></div>
  <div class=lbl>On screen</div><div class=card id=fg_screen></div>
  <div class=lbl>Info cards</div><div class=card id=fg_info></div>
+ <div class=lbl>Help the maker</div><div class=card id=fg_help></div>
  <div class=lbl>System</div>
  <details class=card><summary>Health</summary><div class=body><table id=health></table></div></details>
  <div class=mini>
@@ -338,16 +340,16 @@ function snap(){const i=$('snap');toast('Grabbing the TV picture');i.onload=()=>
 function look(k,label){if(!S.looks)return;const c=S.looks.find(l=>l[2]);if(c&&c[0]==k)return;
  if(!confirm('Switch the TV to '+label+'?'))return;post('/style/'+k).then(()=>{toast('Switching to '+label);setTimeout(()=>location.reload(),20000)})}
 // ---------------- features
-const GROUPS={muted:'sound',announcer:'sound',announce_every:'sound',roundups:'sound',pregame:'sound',jumbotron:'screen',red_zone:'screen',saver:'screen',info_cards:'info',info_live:'info',info_news:'info',info_standings:'info',info_rankings:'info',info_teams:'info',info_weather:'info',crunch_time:'screen',recaps:'screen',eco_fps:'screen'};
+const GROUPS={share_status:'help',muted:'sound',announcer:'sound',announce_every:'sound',roundups:'sound',pregame:'sound',jumbotron:'screen',red_zone:'screen',saver:'screen',info_cards:'info',info_live:'info',info_news:'info',info_standings:'info',info_rankings:'info',info_teams:'info',info_weather:'info',crunch_time:'screen',recaps:'screen',eco_fps:'screen'};
 const CHILD={announce_every:'announcer',roundups:'announcer',pregame:'announcer',info_live:'info_cards',info_news:'info_cards',info_standings:'info_cards',info_rankings:'info_cards',info_teams:'info_cards',info_weather:'info_cards'};
-const HINT={muted:'Everything through the TV speakers',announcer:'Calls the big moments like a broadcaster',announce_every:'Routine plays too, not just the big ones',
+const HINT={share_status:'Once a day: versions, frame rate, temperature, errors. Encrypted; no teams, Wi-Fi or location',muted:'Everything through the TV speakers',announcer:'Calls the big moments like a broadcaster',announce_every:'Routine plays too, not just the big ones',
  roundups:'Scores from around the league now and then',jumbotron:'Retro 8-bit scoreboard replays when someone scores',info_cards:'Standings, rankings and news between games',
  info_live:'Also once per trip around the live games',pregame:'Kickoff in 15 minutes for your favorites',red_zone:'Cut to football drives inside the 20',saver:'Animations overnight, silent',info_news:'Headlines with photos',info_standings:'Division and conference tables',info_rankings:'AP Top 25 for college',
  info_teams:'Records, standing and next game for your favorites',info_weather:'Local weather and the next few days',
  crunch_time:'Cuts to close games late (last few minutes, overtime) and stays there',recaps:'Final score, top players and the deciding play',
  eco_fps:'30 fps when nothing is moving: a cooler, quieter Pi'};
 function feat(fs){if(!fs)return;const on={};fs.forEach(f=>on[f[0]]=f[2]);
- for(const g of ['sound','screen','info']){const box=$('fg_'+g);if(box.children.length)continue;
+ for(const g of ['sound','screen','info','help']){const box=$('fg_'+g);if(box.children.length)continue;
   const mine=fs.filter(f=>(GROUPS[f[0]]||'screen')==g);box.hidden=!mine.length;box.previousElementSibling.hidden=!mine.length;
   mine.forEach(f=>box.append(h('label',{class:'sw'+(CHILD[f[0]]?' child':''),id:'sw_'+f[0]},
    h('div',{class:'tx'},h('b',{},f[1].replace(/ \(off.*\)/,'')),h('span',{},HINT[f[0]]||'')),
@@ -368,6 +370,7 @@ function st(){fetch('/status').then(r=>r.json()).then(s=>{S=s;online(true);
  $('pin').classList.toggle('on',!!s.pinned);
  $('ver').textContent='Version '+s.version+' · TV answers CEC: '+s.cec;$('cec').textContent='TV answers CEC: '+s.cec;
  feat(s.features);hero(s.now||(s.card?{type:'card',kind:'card',title:s.card,sport:''}:null));
+ const lt=s.look_trouble||[];$('looktrouble').hidden=!lt.length;$('looktrouble').textContent=lt.length?lt.join(' and ')+' kept crashing on this box, so the TV switched looks. It tries again after the next update (or tap it to try now).':'';
  const ls=s.looks||[];$('lookbox').hidden=ls.length<2;ls.forEach(l=>{const e=$('look_'+l[0]);if(!e)return;e.classList.toggle('on',l[2]);
   const t=e.querySelector('.t');if(l[2]&&!t.querySelector('span'))t.append(h('span',{},'ON'));if(!l[2]&&t.querySelector('span'))t.querySelector('span').remove()});
  const k=s.now&&s.now.key||'';if(k!=lastKey){lastKey=k;if(cur==0)drawBoard()}

@@ -2,7 +2,12 @@
 [Unit]
 Description=Sportsball LED sports ticker
 After=network-online.target
-StartLimitIntervalSec=0
+# Crashing 5 times in 10 minutes = this version can't run here: systemd stops
+# retrying and starts sportsball-fallback@ (style.py), which puts the other
+# look on the TV.
+StartLimitIntervalSec=10min
+StartLimitBurst=5
+OnFailure=sportsball-fallback@%n.service
 
 [Service]
 # main.py says READY once the screen is up, then pings every 10 s from its

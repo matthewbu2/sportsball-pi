@@ -8,3 +8,4 @@ dist/
 image-cache/
 image-out/
 VERSION
+status-token

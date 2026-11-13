@@ -193,7 +193,6 @@ def call_for(ev):
     """What the announcer says for a moment."""
     g, home = ev.game, ev.home
     team = g.home_name if home else g.away_name
-    other = g.away_name if home else g.home_name
     k, tag = ev.kind, ev.tag
     if k == A.EV_START:
         return f"And we're under way! The {g.away_name} at the {g.home_name}."

@@ -6,12 +6,16 @@
 # (its public half is in updater.py).
 set -e
 cd "$(dirname "$0")"
+# Checks first (check.sh: shared files, pyflakes, JS, vendor libs, Pi smoke
+# tests). FAST=1 skips the slow ARM containers; never publish with FAST=1.
+if [ "$1" = "--publish" ] && [ -n "$FAST" ]; then echo "no FAST=1 with --publish"; exit 1; fi
+./check.sh ${FAST:+--fast}
 KEY=$HOME/.config/sportsball/release-key.pem
 VER=$(date +%Y.%m.%d.%H%M%S)
 rm -rf dist
 mkdir -p dist/stage
 rsync -a --exclude __pycache__ --exclude cache --exclude 'ticker.log*' --exclude 'config.json*' \
-  --exclude dist --exclude notes --exclude deploy.sh --exclude release.sh --exclude 'image*' --exclude .git --exclude .gitignore ./ dist/stage/
+  --exclude dist --exclude notes --exclude deploy.sh --exclude release.sh --exclude 'image*' --exclude .git --exclude check --exclude check.sh --exclude SHARED --exclude tools --exclude .gitignore ./ dist/stage/
 echo "$VER" > dist/stage/VERSION
 tar czf dist/sportsball.tar.gz -C dist/stage .
 SHA=$(sha256sum dist/sportsball.tar.gz | cut -d' ' -f1)

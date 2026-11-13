@@ -1,0 +1,12 @@
+# User service, started by systemd when a look's service fails: it crashed 5
+# times in 10 minutes (StartLimitBurst in sportsball.service and
+# sportsball-hd.service). style.py --fallback benches that version and puts
+# the other look on the TV (or, with nothing else to show, retries slowly).
+# Shared by both looks (same file in both projects).
+[Unit]
+Description=Sportsball: %i keeps crashing, switch looks
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'cd %h/ticker 2>/dev/null || cd %h/hd; exec /usr/bin/python3 -u style.py --fallback %i'
+TimeoutStartSec=5min

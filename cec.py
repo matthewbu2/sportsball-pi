@@ -57,7 +57,6 @@ def update(games):
 
 
 def _loop():
-    global _we_turned_on, state
     _ctl("--playback", "-o", "Sportsball")
     while True:
         try:

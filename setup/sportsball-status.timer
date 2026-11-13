@@ -1,0 +1,12 @@
+# Daily status report (sportsball-status.service): 20 minutes after boot, then
+# every 24 hours. Shared by both looks (same file in both projects).
+[Unit]
+Description=Sportsball daily status report
+
+[Timer]
+OnBootSec=20min
+OnUnitActiveSec=24h
+RandomizedDelaySec=10min
+
+[Install]
+WantedBy=timers.target

@@ -599,6 +599,7 @@ def run_screen():
     extras_seen, slow_at, beat_at = 0, 0.0, 0.0
     fps_at, fps_n, worst, last = time.monotonic(), 0, 0.0, time.monotonic()
     sd_notify("READY=1")
+    style.ensure_units(os.path.dirname(os.path.abspath(__file__)))
     while True:
         now = time.monotonic()
         # Frame rate for the remote's health table: average + slowest frame, per 10 s.
@@ -702,7 +703,7 @@ def run_png(out_dir):
         crawl.ticker.frame()
         name = {C.GAME: lambda: f"{SPORT_LABELS[c.sport]}-{c.ref.away_abbr}-{c.ref.home_abbr}"}.get(
             c.type, lambda: ["header", "game", "nodata", "msg", "live", "favs", "nextup", "ranks", "standings",
-                             "news", "remote"][c.type])()
+                             "news", "remote", "setup"][c.type])()
         save_png(fb, os.path.join(out_dir, f"{i:03d}-{name}.png"), overlays=C.OVERLAYS)
     print(f"{len(crawl.cards)} cards -> {out_dir}")
 

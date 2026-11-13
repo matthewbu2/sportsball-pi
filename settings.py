@@ -20,6 +20,7 @@ PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
 DEFAULTS = {
     "teams": [[1, ""], [5, ""], [3, ""], [2, ""], [4, ""], [6, ""]],
     "favorites": "",
+    "share_status": True,       # daily encrypted status report to the maker (status.py)
     "brightness": 100,          # percent
     "night_dim": True,          # dim between night_start and night_end
     "night_start": 23,          # hour, local
