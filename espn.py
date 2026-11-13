@@ -439,14 +439,19 @@ def _get(sport, dates, **extra):
     return r
 
 
+FULL_GROUP = {5: 80, 6: 50}
+
+
 def _fav_extra_events(sport, dates, favs, have_ids):
-    """College football's default scoreboard is only the featured/ranked
-    games; a favorite's game against an unranked team is only in the full
-    FBS list (groups=80). Those events, favorites only."""
-    if sport != 5 or not favs:
+    """College scoreboards default to only the featured/ranked games; a
+    favorite's game against an unranked team is only in the full division
+    list (football: FBS groups=80; men's basketball: Division I groups=50).
+    Those events, favorites only."""
+    group = FULL_GROUP.get(sport)
+    if not group or not favs:
         return []
     try:
-        r = _get(sport, dates, groups=80, limit=400)
+        r = _get(sport, dates, groups=group, limit=400)
         if r.status_code != 200:
             return []
         evs = r.json().get("events") or []
