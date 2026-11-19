@@ -42,7 +42,7 @@ VER=$(cat dist/latest.json | sed 's/.*"version": "\([^"]*\)".*/\1/')
 "$HD_SRC/release.sh"
 HD_VER=$(cat "$HD_SRC/dist/latest.json" | sed 's/.*"version": "\([^"]*\)".*/\1/')
 
-docker run --rm --privileged --network host -v /dev:/dev \
+docker run --rm --platform linux/amd64 --privileged --network host -v /dev:/dev \
   -v "$PWD/image:/build:ro" -v "$PWD/dist:/dist:ro" -v "$HD_SRC/dist:/dist-hd:ro" -v "$PWD/image-cache:/cache:ro" -v "$OUT:/out" \
   -e BASE="$BASE" -e VER="$VER" -e HD_VER="$HD_VER" -e OWNER="$(id -u):$(id -g)" -e DEBIAN_FRONTEND=noninteractive \
   debian:trixie sh /build/build-in-container.sh
