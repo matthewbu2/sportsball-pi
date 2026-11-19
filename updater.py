@@ -29,6 +29,7 @@ import requests
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import logstamp  # noqa: E402
+import upstatus  # noqa: E402
 logstamp.install()
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -130,14 +131,18 @@ HD_DIR = os.path.join(HOME, "hd")
 HD_UNITS = ("sportsball-hd.service", "sportsball-hd-update.service", "sportsball-hd-update.timer")
 
 
-def ensure_hd():
+def ensure_hd(prog=None):
     """Put the HD look next to this one (switched off), so the remote's Look
     picker offers both. Signed like our own releases (same key) and must say
     PRODUCT hd. Done once: after that HD updates itself (its own timer)."""
     if os.path.exists(os.path.join(HD_DIR, "main.py")):
         return
     meta = requests.get(HD_URL + "/latest.json", timeout=20).json()
-    blob = requests.get(HD_URL + "/" + meta["file"], timeout=180).content
+    if prog:
+        prog.step("download", "Getting the HD look", 0)
+        blob = download(HD_URL + "/" + meta["file"], prog, "Getting the HD look")
+    else:
+        blob = requests.get(HD_URL + "/" + meta["file"], timeout=180).content
     _verify(meta, blob)
     tmp = HD_DIR + ".new"
     if os.path.exists(tmp):
@@ -172,29 +177,66 @@ def ensure_hd():
     log(f"installed the HD look {meta['version']} (switched off; pick it in the remote's Look section)")
 
 
-def run(force=False):
+def download(url, prog, label):
+    """GET with progress (percent of Content-Length) into memory."""
+    with requests.get(url, timeout=(20, 60), stream=True) as r:
+        r.raise_for_status()
+        total = int(r.headers.get("Content-Length") or 0)
+        buf, got = io.BytesIO(), 0
+        for chunk in r.iter_content(64 * 1024):
+            buf.write(chunk)
+            got += len(chunk)
+            if total:
+                prog.pct(min(100, got * 100 // total), f"{label} ({got // 1024 // 1024 + 1} of {total // 1024 // 1024 + 1} MB)")
+    return buf.getvalue()
+
+
+def plain(e):
+    """An exception, in words for the remote page."""
+    if isinstance(e, requests.ConnectionError):
+        return "Couldn't reach GitHub. Is the ticker online? (Some networks block it.)"
+    if isinstance(e, requests.Timeout):
+        return "GitHub took too long to answer. Try again in a few minutes."
+    if isinstance(e, requests.HTTPError):
+        return f"GitHub answered with an error ({e.response.status_code if e.response is not None else '?'})."
+    if type(e).__name__ == "InvalidSignature":
+        return "The download's signature didn't check out, so it wasn't installed."
+    if isinstance(e, OSError):
+        return f"Couldn't write the new version: {e.strerror or e}"
+    return str(e) or type(e).__name__
+
+
+def run(force=False, prog=None):
     sys.path.insert(0, HERE)
     import settings
+    prog = prog or upstatus.Progress("classic", force)
     if settings.get("auto_update") or force:
         try:
-            ensure_hd()
+            ensure_hd(prog)
         except Exception as e:  # noqa: BLE001 -- never let this block our own update
             log(f"HD look not installed: {e!r}")
     url = (settings.get("update_url") or "").rstrip("/")
     if not url:
         log("no update_url set")
+        prog.fail("No release address is set (Settings > Updates).")
         return
     if not settings.get("auto_update") and not force:
         log("auto-update is off")
+        prog.done("Nightly updates are off.")
         return
-    meta = requests.get(url + "/latest.json", timeout=20).json()
     have = current_version()
+    prog.step("check", "Checking for a new version", **{"from": have})
+    meta = requests.get(url + "/latest.json", timeout=20).json()
     if meta["version"] <= have:
         log(f"up to date ({have})")
+        prog.done(f"Already up to date ({have}).", to=have)
         return
     log(f"{have} -> {meta['version']}")
-    blob = requests.get(url + "/" + meta["file"], timeout=120).content
+    prog.step("download", f"Downloading {meta['version']}", 0, to=meta["version"])
+    blob = download(url + "/" + meta["file"], prog, f"Downloading {meta['version']}")
+    prog.step("verify", "Checking the signature")
     _verify(meta, blob)
+    prog.step("install", "Installing")
     if os.path.exists(NEW):
         shutil.rmtree(NEW)
     with tarfile.open(fileobj=io.BytesIO(blob)) as tf:
@@ -202,20 +244,34 @@ def run(force=False):
     if current_version(NEW) != meta["version"]:
         raise ValueError("release VERSION doesn't match latest.json")
     on = _systemctl("is-enabled", "sportsball").strip() == "enabled"
+    if on:
+        prog.step("restart", "Restarting the ticker with the new version")
     _swap_in(NEW, start=on)
+    reboot = upstatus.note_swap(PREV, LIVE, LIVE)
     if not on:                     # the HD look is on (style.py): update quietly, don't start
         log(f"installed {meta['version']} (not running: the other look is on)")
+        prog.done(f"Installed {meta['version']} (the classic look is switched off).", reboot=reboot)
         return
-    time.sleep(HEALTHY_AFTER)
+    end = time.time() + HEALTHY_AFTER
+    while time.time() < end:       # heartbeat + countdown for the page
+        prog.step("watch", f"Making sure it runs smoothly ({int(end - time.time())} s)")
+        time.sleep(5)
     if _steady():
         log(f"now running {meta['version']}")
+        prog.done(f"Updated to {meta['version']}.", reboot=reboot)
     else:
         _roll_back()
+        prog.fail(f"{meta['version']} didn't start properly, so the ticker went back to {have}. "
+                  "The maker has been told.")
 
 
 if __name__ == "__main__":
+    prog = None
     try:
-        run(force="--force" in sys.argv)
+        prog = upstatus.Progress("classic", "--force" in sys.argv)
+        run(force="--force" in sys.argv, prog=prog)
     except Exception as e:  # noqa: BLE001
         log(f"failed: {e!r}")
+        if prog:
+            prog.fail(plain(e))
         sys.exit(1)

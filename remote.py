@@ -264,12 +264,15 @@ class _Handler(BaseHTTPRequestHandler):
             if cur is not None:
                 playing = f"{A.abbr_of(cur.game, cur.home)} {A.KIND_NAMES[cur.kind]}"
             import updater
+            import upstatus
             if "health" in self.path:
                 return self._json(_health())
             self._json({"games": len(games), "live": sum(1 for g in games if g.state == IN), "playing": playing,
                         "pinned": _crawl.pinned, "cec": cec.state, "version": updater.current_version(),
                         "muted": settings.get("muted"), "looks": style.labels(), "look_wanted": style.wanted(), "look_trouble": style.trouble(), "setup_done": bool(settings.get("setup_done") or settings.get("favorites")),
                         "now": _crawl.now_info() if hasattr(_crawl, "now_info") else None,
+                        "update": upstatus.read(), "reboot": upstatus.reboot_reasons(),
+                        "can_reboot": "reboot" in (_account_state().get("can") or []),
                         "features": [(k, label, bool(settings.get(k)) == on) for k, label, on in FEATURES],
                         "card": f"{_CARD_NAMES[_crawl.cards[_crawl.cur].type]} {_crawl.cur + 1}/{len(_crawl.cards)}"})
         elif self.path == "/board":
@@ -358,13 +361,15 @@ class _Handler(BaseHTTPRequestHandler):
             settings.update({"muted": not settings.get("muted")})
             return self._send(200, b"ok")
         elif self.path == "/update":
-            # A transient unit, so it survives the ticker restarting under it.
-            log = os.path.join(HERE, "ticker.log")
-            subprocess.Popen(["systemd-run", "--user", "--collect", "--unit", "sportsball-update-now",
-                              "-p", f"StandardOutput=append:{log}", "-p", f"StandardError=append:{log}",
-                              "/usr/bin/python3", "-u", os.path.join(HERE, "updater.py"), "--force"],
-                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            return self._send(200, b"ok")
+            import upstatus
+            return self._json(upstatus.launch("classic", HERE, "sportsball-update-now", os.path.join(HERE, "ticker.log")))
+        elif self.path == "/reboot":
+            import upstatus
+            if "reboot" not in (_account_state().get("can") or []):
+                return self._json({"ok": False, "error": "Unplug the ticker for a few seconds instead (or it restarts itself at 3:30 AM)."})
+            if upstatus.busy():
+                return self._json({"ok": False, "error": "An update is still running. Wait for it to finish."})
+            return self._json(_root_request({"kind": "reboot"}))
         elif self.path == "/account":
             try:
                 req = json.loads(body)

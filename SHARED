@@ -28,3 +28,4 @@ setup/sportsball-fallback@.service
 setup/sportsball-status.service
 setup/sportsball-status.timer
 logstamp.py
+upstatus.py

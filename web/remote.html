@@ -152,6 +152,29 @@ input[type=checkbox]:checked{background:linear-gradient(180deg,#ffd866,#f2b400);
 input[type=checkbox]:checked:before{transform:translateX(20px);background:#fff}
 .team{display:flex;gap:8px;padding:8px 0}.team select{width:100px}.team input{flex:1;min-width:0}
 .note{color:var(--faint);font-size:13px;margin:8px 2px}
+/* update sheet + restart banner */
+#upwrap{position:fixed;inset:0;z-index:50;background:rgba(3,6,16,.72);display:flex;align-items:flex-end;justify-content:center;padding:16px}
+#upsheet{width:100%;max-width:520px;background:linear-gradient(180deg,#121c44,#0a1130);border:1px solid var(--edge2);border-radius:22px;
+ padding:18px 18px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.5)}
+#upsheet h3{margin:0 0 4px;font:800 24px/1.1 BC,sans-serif;letter-spacing:.04em}
+#upsheet .vers{color:var(--dim);font:600 14px BC,sans-serif;letter-spacing:.06em;min-height:18px}
+.steps{list-style:none;margin:14px 0;padding:0}
+.steps li{display:flex;align-items:center;gap:10px;padding:7px 0;color:var(--faint);font-size:15px}
+.steps li i{flex:none;width:20px;height:20px;border-radius:50%;border:2px solid var(--edge2);display:grid;place-items:center;font:800 12px/1 B,sans-serif;font-style:normal}
+.steps li.done{color:var(--dim)}.steps li.done i{background:var(--good);border-color:transparent;color:#04220f}
+.steps li.now{color:#fff}.steps li.now i{border-color:var(--gold);border-top-color:transparent;animation:spin .9s linear infinite}
+.steps li.bad{color:#fff}.steps li.bad i{background:var(--live);border-color:transparent;color:#fff}
+@keyframes spin{to{transform:rotate(360deg)}}
+.bar{height:6px;border-radius:9px;background:rgba(255,255,255,.08);overflow:hidden;margin:-2px 0 6px 30px}
+.bar b{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd866,#f2b400);transition:width .4s}
+#upmsg{border-radius:14px;padding:12px 14px;font-size:15px;background:rgba(255,255,255,.05);border:1px solid var(--edge)}
+#upmsg.ok{border-color:rgba(62,224,143,.45);background:rgba(62,224,143,.1)}
+#upmsg.err{border-color:rgba(255,75,75,.5);background:rgba(255,75,75,.12)}
+#upmsg.wait{border-color:rgba(255,206,70,.4);background:rgba(255,206,70,.08)}
+.uprow{display:flex;gap:10px;margin-top:14px}.uprow .btn{flex:1}
+.rbanner{margin:14px 0 0;padding:13px 14px;border-radius:16px;background:rgba(255,206,70,.1);border:1px solid rgba(255,206,70,.45);font-size:15px}
+.rbanner b{display:block;font:800 17px BC,sans-serif;letter-spacing:.06em;color:var(--gold);margin-bottom:2px}
+.rbanner .btn{margin-top:10px;width:100%}
 .savebar{position:sticky;bottom:calc(84px + env(safe-area-inset-bottom));padding-top:12px;z-index:5}
 textarea{width:100%;resize:vertical}
 details.card{padding:0}
@@ -191,6 +214,7 @@ nav button.on:before{content:"";position:absolute;top:-9px;width:28px;height:3px
 <main class=wrap>
 <!-- NOW -->
 <section class="view on" id=v0>
+ <div class=rbanner id=rb0 hidden></div>
  <div class=hero id=hero><div class=bg></div><div class=in id=heroin><div class=empty>Waiting for the ticker...</div></div></div>
  <div class=row>
   <button class=btn id=pin onclick="cmd('/pin','Pinned')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3z"/></svg><span>Stay</span></button>
@@ -228,11 +252,12 @@ nav button.on:before{content:"";position:absolute;top:-9px;width:28px;height:3px
  <details class=card><summary>Health</summary><div class=body><table id=health></table></div></details>
  <div class=mini>
   <button class=btn onclick="cmd('/voice/test','Testing the voice')">Test voice</button>
-  <button class=btn onclick="cmd('/update','Checking for updates')">Updates</button>
+  <button class=btn onclick="upStart()">Updates</button>
   <button class=btn onclick="cmd('/tv/on','TV on')">TV on</button>
   <button class=btn onclick="cmd('/tv/off','TV off')">TV off</button>
  </div>
  <p class=note id=ver></p>
+ <p class=note id=uplast></p>
  <div class=lbl>Note something for later</div>
  <div class=card style="padding:12px"><textarea id=note rows=3 placeholder="What looks wrong or should change? The TV picture and the game data are saved with it."></textarea>
   <button class="btn wide" style="margin-top:10px" onclick="note()">Save note</button></div>
@@ -289,6 +314,13 @@ nav button.on:before{content:"";position:absolute;top:-9px;width:28px;height:3px
  <button onclick="tab(3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 01-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 010-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 014 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 010 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>Settings</button>
 </div></nav>
 <div id=toast></div>
+<div id=upwrap hidden onclick="if(event.target==this&&upDone)upClose()"><div id=upsheet role=dialog aria-labelledby=uph>
+ <h3 id=uph>Software update</h3><div class=vers id=upvers></div>
+ <ul class=steps id=upsteps></ul>
+ <div id=upmsg></div>
+ <div class=rbanner id=rb1 hidden></div>
+ <div class=uprow><button class=btn id=upretry hidden onclick="upStart()">Try again</button><button class=btn id=upclose onclick="upClose()">Hide</button></div>
+</div></div>
 
 <script>
 const SPORTS=@SPORTS@;
@@ -363,9 +395,52 @@ function flip(k){post('/toggle/'+k).then(()=>{st();const f=(S.features||[]).find
 function health(){fetch('/status?health').then(r=>r.json()).then(rows=>{const t=$('health');t.replaceChildren();
  rows.forEach(([k,v,ok])=>t.append(h('tr',{class:ok?'':'bad'},h('td',{},k),h('td',{},v))))}).catch(()=>{})}
 function note(){const t=$('note');if(!t.value.trim())return;fetch('/note',{method:'POST',body:t.value}).then(r=>r.text()).then(m=>{t.value='';toast('Note saved')})}
+// ---------------- software update: live progress + restart notice
+const UPSTEPS=[['check','Check for a new version'],['download','Download it'],['verify','Check its signature'],['install','Install it'],
+ ['restart','Restart the ticker'],['watch','Make sure it runs smoothly']];
+let upOpen=false,upDone=true,upSeen=0,upLost=0,upHid=false;
+function upStart(){upOpen=true;upDone=false;upHid=false;upSeen=Date.now()/1000-5;upLost=0;$('upwrap').hidden=false;
+ upDraw({state:'running',step:'check',text:'Asking the ticker to check…'});
+ fetch('/update',{method:'POST'}).then(r=>r.json()).then(j=>{if(!j.ok)upDraw({state:'error',step:'check',text:j.error||'The ticker said no.'});st()})
+ .catch(()=>upDraw({state:'error',step:'check',text:"Can't reach the ticker. Is your phone on the same Wi-Fi?"}))}
+function upClose(){upHid=!upDone;upOpen=false;$('upwrap').hidden=true}
+function upDraw(u){if(!u||!u.state)return;
+ const idx=UPSTEPS.findIndex(x=>x[0]==u.step),fin=u.state!='running',bad=u.state=='error',ok=u.state=='ok';
+ const uptodate=ok&&u.to&&u.from==u.to||ok&&/up to date/i.test(u.text||'');
+ $('upvers').textContent=u.from&&u.to&&u.from!=u.to?u.from+'  →  '+u.to:u.from?'Now running '+u.from:'';
+ const ul=$('upsteps');ul.replaceChildren();
+ UPSTEPS.forEach(([k,label],i)=>{
+  if(uptodate&&i>0)return;
+  let c='',mark='';
+  if(ok||i<idx){c='done';mark='✓'}else if(i==idx){c=bad?'bad':fin?'done':'now';mark=bad?'!':fin?'✓':''}
+  ul.append(h('li',{class:c},h('i',{},mark),label));
+  if(k=='download'&&i==idx&&!fin&&u.pct!=null){const b=h('div',{class:'bar'},h('b',{}));b.firstChild.style.width=u.pct+'%';ul.append(b)}});
+ const m=$('upmsg');m.className=bad?'err':ok?'ok':'';
+ m.textContent=bad?u.text:ok?(uptodate?'✓ '+u.text:'✓ '+u.text+' All done.'):(u.text||'Working…');
+ upDone=fin;$('upretry').hidden=!bad;$('upclose').textContent=fin?'Close':'Hide';
+ $('uph').textContent=bad?'Update didn’t finish':ok?(uptodate?'You’re up to date':'Update installed'):'Updating…'}
+function upLostDraw(u){// the ticker restarts itself mid-update: the page loses it for ~20-40 s, which is fine
+ const m=$('upmsg');upLost++;
+ if(u&&u.state=='running'&&['install','restart','watch'].includes(u.step)){m.className='wait';
+  m.textContent='The ticker is restarting with the new version. This page reconnects by itself — keep it open.'+(upLost>40?' (Taking longer than usual…)':'')}
+ else{m.className='err';m.textContent="Can't reach the ticker right now. Retrying…"}}
+function rebootDraw(s){const why=s.reboot||[];
+ ['rb0','rb1'].forEach(id=>{const b=$(id);b.hidden=!why.length;if(!why.length)return;b.replaceChildren(
+  h('b',{},'RESTART NEEDED'),why.join(' ')+(s.can_reboot?' The TV goes dark for about a minute.':' Unplug the ticker for 10 seconds and plug it back in — or it restarts itself at 3:30 AM.'),
+  ...(s.can_reboot?[h('button',{class:'btn',onclick:rebootNow},'Restart now')]:[]))})}
+function rebootNow(){if(!confirm('Restart the ticker now? The TV goes dark for about a minute.'))return;
+ fetch('/reboot',{method:'POST'}).then(r=>r.json()).then(j=>toast(j.ok?'Restarting… back in about a minute':(j.error||'The ticker said no')))
+ .catch(()=>toast("Can't reach the ticker"))}
+function upLast(u){const e=$('uplast');if(!u||!u.state||u.state=='running'){e.textContent='';return}
+ const t=new Date((u.updated||0)*1000);e.textContent='Last update check '+t.toLocaleString([], {weekday:'short',hour:'numeric',minute:'2-digit'})+': '+u.text}
+let lastUp=null;
 // ---------------- status loop
 let lastKey='';
 function st(){fetch('/status').then(r=>r.json()).then(s=>{S=s;online(true);
+ const u=s.update||{};lastUp=u;upLost=0;rebootDraw(s);upLast(u);
+ if(u.state=='running'&&u.manual&&!upOpen&&!upHid){upOpen=true;upDone=false;$('upwrap').hidden=false}
+ if(upOpen&&(u.started||0)>=upSeen)upDraw(u);
+ if(u.state=='running'&&u.manual)upDone=false;
  $('st').textContent=s.games+' games · '+s.live+' live'+(s.pinned?' · staying on this one':'');
  $('pin').classList.toggle('on',!!s.pinned);
  $('ver').textContent='Version '+s.version+' · TV answers CEC: '+s.cec;$('cec').textContent='TV answers CEC: '+s.cec;
@@ -374,7 +449,7 @@ function st(){fetch('/status').then(r=>r.json()).then(s=>{S=s;online(true);
  const ls=s.looks||[];$('lookbox').hidden=ls.length<2;ls.forEach(l=>{const e=$('look_'+l[0]);if(!e)return;e.classList.toggle('on',l[2]);
   const t=e.querySelector('.t');if(l[2]&&!t.querySelector('span'))t.append(h('span',{},'ON'));if(!l[2]&&t.querySelector('span'))t.querySelector('span').remove()});
  const k=s.now&&s.now.key||'';if(k!=lastKey){lastKey=k;if(cur==0)drawBoard()}
-}).catch(()=>online(false))}
+}).catch(()=>{online(false);if(upOpen&&!upDone)upLostDraw(lastUp)})}
 // ---------------- settings
 function load(){fetch('/settings').then(r=>r.json()).then(c=>{const f=$('f');
  for(const e of f.elements){if(e.name&&!(e.name in c)){const l=e.closest('label');if(l)l.hidden=true}}
@@ -391,5 +466,5 @@ function replay(n){post('/replay/'+n).then(()=>{toast('Finding a game…');let k
  if(j.on){clearInterval(w);toast('Replaying '+j.on)}else if(!j.loading&&(j.msg||++k>40)){clearInterval(w);toast(j.msg||'No game found')}})},1500)})}
 function replayStop(){post('/replay/stop').then(()=>toast('Back to live scores'))}
 st();board();{const T={'#features':1,'#demos':2,'#settings':3};if(T[location.hash])tab(T[location.hash])}
-setInterval(st,3000);setInterval(()=>{if(cur==0)board();if(cur==1)health()},12000);
+setInterval(st,3000);setInterval(()=>{if(upOpen&&!upDone)st()},1000);setInterval(()=>{if(cur==0)board();if(cur==1)health()},12000);
 </script></body></html>

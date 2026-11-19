@@ -46,7 +46,7 @@ def has_login():
 def _write_state(owner_uid, result=None):
     tmp = STATE + ".tmp"
     with open(tmp, "w") as f:
-        json.dump({"available": not has_login(), "result": result}, f)
+        json.dump({"available": not has_login(), "result": result, "can": ["name", "reboot"]}, f)
     os.chmod(tmp, 0o644)
     os.chown(tmp, owner_uid, -1)
     os.replace(tmp, STATE)
@@ -116,6 +116,11 @@ def _watch(owner_uid):
                 os.remove(REQUEST)          # the password doesn't stay on disk
             except OSError:
                 pass
+        if req.get("kind") == "reboot":          # the remote's "Restart now" (after an update)
+            _write_state(owner_uid, {"id": req.get("id"), "ok": True, "error": ""})
+            time.sleep(2)                          # let the answer reach the phone first
+            subprocess.run(["systemctl", "reboot"], capture_output=True)
+            continue
         if req.get("kind") == "name":
             name = str(req.get("name", "")).strip().lower()
             try:
