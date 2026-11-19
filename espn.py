@@ -7,6 +7,7 @@ no dates and skip ranges for 30 minutes. Akamai can blacklist a User-Agent
 that is hammered in a burst; changing the UA string unblocks it.
 """
 
+import datetime
 import time
 import unicodedata
 from dataclasses import dataclass, field
@@ -74,6 +75,7 @@ class Game:
     period: int = 0
     clock_sec: int = 0
     fav_mask: int = 0                # bit0 away, bit1 home
+    conf_game: bool = False          # college: a team from a favorite's conference plays
     line_first: int = 1
     away_line: list = field(default_factory=list)   # None = not played yet
     home_line: list = field(default_factory=list)
@@ -440,39 +442,104 @@ def _get(sport, dates, **extra):
 
 
 FULL_GROUP = {5: 80, 6: 50}
+CONF_RETRY_S = 10 * 60
+_conf_cache = {}        # (sport, favs) -> set of conference ids
+_conf_failed = {}       # (sport, favs) -> time of the last failed lookup
 
 
-def _fav_extra_events(sport, dates, favs, have_ids):
-    """College scoreboards default to only the featured/ranked games; a
-    favorite's game against an unranked team is only in the full division
-    list (football: FBS groups=80; men's basketball: Division I groups=50).
-    Those events, favorites only."""
-    group = FULL_GROUP.get(sport)
-    if not group or not favs:
-        return []
+def fav_conferences(sport, favs):
+    """Conference ids (ESPN group ids, e.g. Big Ten = 7 in basketball, 5 in
+    football) of the favorites that play this college sport. Cached; a failed
+    lookup is retried after CONF_RETRY_S."""
+    if sport not in FULL_GROUP or not favs:
+        return set()
+    key = (sport, tuple(favs))
+    if key in _conf_cache:
+        return _conf_cache[key]
+    if time.time() - _conf_failed.get(key, 0) < CONF_RETRY_S:
+        return set()
+    url = f"https://site.api.espn.com/apis/site/v2/sports/{SPORT_PATHS[sport]}/teams"
+    confs = set()
     try:
-        r = _get(sport, dates, groups=group, limit=400)
-        if r.status_code != 200:
-            return []
-        evs = r.json().get("events") or []
-    except (requests.RequestException, ValueError):
-        return []
+        r = SESSION.get(url, params={"limit": 1000}, timeout=15)
+        r.raise_for_status()
+        teams = [t.get("team") or {} for t in r.json()["sports"][0]["leagues"][0]["teams"]]
+        for t in teams:
+            if t.get("id") and any(fav_matches(t, f) for f in favs):
+                d = SESSION.get(f"{url}/{t['id']}", timeout=15)
+                d.raise_for_status()
+                gid = (((d.json().get("team") or {}).get("groups") or {}).get("id"))
+                if gid:
+                    confs.add(str(gid))
+    except (requests.RequestException, ValueError, KeyError, IndexError, TypeError) as e:
+        print(f"[ESPN] {SPORT_LABELS[sport]} conference lookup failed: {str(e)[:80]}", flush=True)
+        _conf_failed[key] = time.time()
+        return set()
+    if confs:
+        print(f"[ESPN] {SPORT_LABELS[sport]} favorites' conferences: {sorted(confs)}", flush=True)
+    _conf_cache[key] = confs
+    return confs
+
+
+def _days(dates):
+    """"YYYYMMDD-YYYYMMDD" -> each day (the full-division lists reject ranges)."""
+    if "-" not in dates:
+        return [dates]
+    a, b = dates.split("-", 1)
+    try:
+        d, end = datetime.date(int(a[:4]), int(a[4:6]), int(a[6:])), \
+            datetime.date(int(b[:4]), int(b[4:6]), int(b[6:]))
+    except ValueError:
+        return [a]
     out = []
-    for ev in evs:
-        if str(ev.get("id")) in have_ids:
-            continue
-        comps = ((ev.get("competitions") or [{}])[0].get("competitors") or [])
-        if any(fav_matches(c.get("team") or {}, f) for c in comps for f in favs):
-            out.append(ev)
+    while d <= end and len(out) < 10:
+        out.append(d.strftime("%Y%m%d"))
+        d += datetime.timedelta(days=1)
     return out
 
 
-def fetch(sport, queries, favs, dates="", cutoff="", exact=False):
+def _conf_ids(ev):
+    comps = ((ev.get("competitions") or [{}])[0].get("competitors") or [])
+    return {str((c.get("team") or {}).get("conferenceId") or "") for c in comps} - {""}
+
+
+def _fav_extra_events(sport, dates, favs, have_ids, confs=()):
+    """College scoreboards default to only the featured/ranked games; a
+    favorite's game against an unranked team, or an unranked conference
+    rival's game, is only in the full division list (football: FBS groups=80;
+    men's basketball: Division I groups=50). Those events: favorites' games
+    and games with a team from one of `confs`."""
+    group = FULL_GROUP.get(sport)
+    if not group or not (favs or confs):
+        return []
+    out = []
+    for day in _days(dates):
+        try:
+            r = _get(sport, day, groups=group, limit=400)
+            if r.status_code != 200:
+                continue
+            evs = r.json().get("events") or []
+        except (requests.RequestException, ValueError):
+            continue
+        for ev in evs:
+            eid = str(ev.get("id"))
+            if eid in have_ids:
+                continue
+            comps = ((ev.get("competitions") or [{}])[0].get("competitors") or [])
+            if any(fav_matches(c.get("team") or {}, f) for c in comps for f in favs) or \
+                    (confs and _conf_ids(ev) & confs):
+                have_ids.add(eid)
+                out.append(ev)
+    return out
+
+
+def fetch(sport, queries, favs, dates="", cutoff="", exact=False, conf=True):
     """Games of one sport matching the configured team queries.
 
     dates: "YYYYMMDD" or "YYYYMMDD-YYYYMMDD"; cutoff: drop games starting at or
     after this ISO time (ESPN's no-dates fallback returns football's whole week).
     exact: always ask for these dates (one day; no fallback to the current week).
+    conf: college: also the games of teams in the favorites' conferences.
     """
     global _range_failed_at
     use_range = bool(dates) and (exact or not _range_failed_at or time.time() - _range_failed_at > RANGE_RETRY_S)
@@ -487,11 +554,13 @@ def fetch(sport, queries, favs, dates="", cutoff="", exact=False):
         raise FetchError(f"{SPORT_LABELS[sport]} HTTP {r.status_code}")
     games = []
     events = r.json().get("events") or []
-    events += _fav_extra_events(sport, dates if use_range else "", favs, {str(e.get("id")) for e in events})
+    confs = fav_conferences(sport, favs) if conf else set()
+    events += _fav_extra_events(sport, dates, favs, {str(e.get("id")) for e in events}, confs)
     for ev in events:
         if cutoff and (ev.get("date") or "") >= cutoff:
             continue
         g = parse_event(ev, sport, queries, favs)
         if g:
+            g.conf_game = bool(confs and _conf_ids(ev) & confs)
             games.append(g)
     return games

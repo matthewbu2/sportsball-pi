@@ -58,6 +58,7 @@ FEATURES = [   # (setting, label, on = setting True)  -- switches on the Feature
     ("pregame", "Announce favorites' kickoffs", True),
     ("red_zone", "Jump to red-zone drives", True),
     ("saver", "Overnight screensaver", True),
+    ("conf_games", "College: your conference's games", True),
     ("share_status", "Send a daily status report to the maker", True),
 ]
 

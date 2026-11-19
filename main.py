@@ -154,7 +154,7 @@ class Fetcher:
         games = [g for s in self.sports for g in self.by_sport[s]]
         if settings.get("cfb_top25"):
             # A college Saturday is 50+ games: keep favorites and ranked teams.
-            games = [g for g in games if g.sport_idx != 5 or g.fav_mask or g.away_rank or g.home_rank]
+            games = [g for g in games if g.sport_idx != 5 or g.fav_mask or g.conf_game or g.away_rank or g.home_rank]
         self.games = games
         self.version += 1
 
@@ -165,7 +165,8 @@ class Fetcher:
         errs = 0
         for s in self.sports:
             try:
-                self.by_sport[s] = espn_worker.fetch(s, self.queries(s), self.favs, rng, cutoff)
+                self.by_sport[s] = espn_worker.fetch(s, self.queries(s), self.favs, rng, cutoff,
+                                                     conf=bool(settings.get("conf_games")))
             except (FetchError, OSError, ValueError) as e:
                 errs += 1
                 self.last_error = f"{time.strftime('%H:%M')} {str(e)[:100]}"
@@ -189,7 +190,8 @@ class Fetcher:
         for s in sports:
             self.last_live[s] = time.time()
             try:
-                today = espn_worker.fetch(s, self.queries(s), self.favs, day, day_end)
+                today = espn_worker.fetch(s, self.queries(s), self.favs, day, day_end,
+                                           conf=bool(settings.get("conf_games")))
             except (FetchError, OSError, ValueError) as e:
                 self.last_error = f"{time.strftime('%H:%M')} live: {str(e)[:100]}"
                 print(f"[Fetch] live {e}", flush=True)

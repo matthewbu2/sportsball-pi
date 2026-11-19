@@ -34,6 +34,7 @@ DEFAULTS = {
     "red_zone": True,           # cut to a football game when it reaches the red zone
     "show_odds": True,          # betting line on upcoming games
     "cfb_top25": True,          # college football: only favorites' and Top 25 teams' games
+    "conf_games": True,         # college: also games of teams in the favorites' conferences
     "delay": 10,                # seconds to hold scores back, to match a streaming TV's lag
     "update_url": "https://github.com/matthewbu2/sportsball-pi/releases/latest/download",   # updater.py
     "auto_update": True,        # install new releases nightly
@@ -90,7 +91,7 @@ def update(changes):
                 v = bool(v)
             elif isinstance(DEFAULTS[k], int):
                 v = int(v)
-            if k in ("teams", "favorites", "cfb_top25", "setup_done") and v != _cfg.get(k):
+            if k in ("teams", "favorites", "cfb_top25", "conf_games", "setup_done") and v != _cfg.get(k):
                 changed_teams = True
             _cfg[k] = v
         out = {k: _cfg[k] for k in DEFAULTS}
